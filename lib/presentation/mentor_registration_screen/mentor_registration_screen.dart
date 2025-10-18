@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/app_export.dart';
+import '../../routes/app_routes.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
@@ -318,11 +319,7 @@ class MentorRegistrationScreen extends StatelessWidget {
         ),
       );
 
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => InstitutionalVerificationScreen(),
-        ),
-      );
+      Navigator.pushNamed(context, AppRoutes.idVerificationScreen);
     }
   }
 
