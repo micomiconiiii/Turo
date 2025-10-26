@@ -1,7 +1,16 @@
+// Import Flutter's material library and services (for text formatters)
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // To use number input formatting
+import 'package:flutter/services.dart';
+
+// Import the next screen in the flow
 import 'looking_for_screen.dart';
 
+// Import your new reusable widgets
+import '../widgets/common_widgets.dart';
+
+/// Step 5 of the profile setup: "Specify your rates."
+/// This is a StatefulWidget because it uses TextEditingControllers
+/// to manage the state of the input fields.
 class RatesSetupScreen extends StatefulWidget {
   const RatesSetupScreen({super.key});
 
@@ -11,73 +20,39 @@ class RatesSetupScreen extends StatefulWidget {
 
 class _RatesSetupScreenState extends State<RatesSetupScreen> {
   // 1. Controllers to get text from text fields
+  // These controllers are used by the SetupTextField widget.
   final TextEditingController _minRateController = TextEditingController();
   final TextEditingController _maxRateController = TextEditingController();
 
+  /// This function runs when the widget is permanently removed from the tree.
+  /// It's important to dispose controllers to free up resources.
   @override
   void dispose() {
-    // 2. Important: Dispose controllers when the widget is removed
     _minRateController.dispose();
     _maxRateController.dispose();
     super.dispose();
   }
 
-  // 3. Function to navigate to the next step
+  /// Navigates the user to the next step (LookingForScreen)
   void _goToNextStep() {
+    // Get the text entered by the user from the controllers
     final minRate = _minRateController.text;
     final maxRate = _maxRateController.text;
+
+    // Print the values to the debug console
     print("Min Rate: $minRate, Max Rate: $maxRate");
 
+    // Navigate to the next screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const LookingForScreen(), // <-- CHANGE TO THIS
+        builder: (context) => const LookingForScreen(),
       ),
     );
   }
 
-  // Helper widget to build the text field labels
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: Colors.grey[700],
-        fontWeight: FontWeight.w500,
-        fontSize: 15,
-      ),
-    );
-  }
-
-  // Helper widget to build the text fields
-  Widget _buildTextField(String hint, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      // 4. Set keyboard type to numbers and dots
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        // Allow only numbers and a single dot
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[400]),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 15, horizontal: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF1B4D44), width: 2),
-        ),
-      ),
-    );
-  }
+  // 4. We no longer need the _buildLabel and _buildTextField helper methods,
+  //    as this logic is now inside `SetupTextField`.
 
   @override
   Widget build(BuildContext context) {
@@ -89,52 +64,15 @@ class _RatesSetupScreenState extends State<RatesSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. HEADER (Stays at the top) ---
-              const Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              // --- 1. HEADER ---
+              // Replaced the "TURO" Text widget
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Rates", // <-- UPDATED
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 5 out of 6", // <-- UPDATED
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: List.generate(6, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 5,
-                      margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                      decoration: BoxDecoration(
-                        // Fill 5 segments
-                        color: index < 5 // <-- UPDATED
-                            ? const Color(0xFF1B4D44)
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
+
+              // Replaced the progress Row widgets
+              const SetupProgressHeader(
+                title: "Rates", // <-- Updated title
+                currentStep: 5, // <-- Updated step
               ),
               const SizedBox(height: 40),
 
@@ -142,32 +80,27 @@ class _RatesSetupScreenState extends State<RatesSetupScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start, // Keep alignment
                     children: [
-                      Center(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFF1B4D44),
-                          // This icon matches your design
-                          child: const Icon(Icons.calculate_outlined, // <-- UPDATED ICON
-                              color: Colors.white,
-                              size: 45),
-                        ),
-                      ),
+                      // Replaced the Center(CircleAvatar(...))
+                      const SetupScreenIcon(icon: Icons.calculate_outlined), // <-- Updated icon
                       const SizedBox(height: 30),
+
+                      // This part is specific to this screen (title/subtitle)
                       Center(
                         child: Column(
                           children: [
                             const Text(
-                              "Specify your rates.", // <-- UPDATED
+                              "Specify your rates.",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 6),
+                            // Removed 'const' because TextStyle uses non-constant Colors.grey[600]
                             Text(
-                              "What are your rates?", // <-- UPDATED
+                              "What are your rates?",
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -177,54 +110,41 @@ class _RatesSetupScreenState extends State<RatesSetupScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      
-                      // 5. Text Fields for Rates
-                      _buildLabel("Minimum Range per hour (PHP/hour)"),
-                      const SizedBox(height: 10),
-                      _buildTextField("PHP 1000.00", _minRateController),
+
+                      // --- Text Fields for Rates ---
+                      // Replaced the custom helper methods with the reusable SetupTextField widget
+                      SetupTextField(
+                        label: "Minimum Range per hour (PHP/hour)",
+                        hint: "PHP 1000.00",
+                        controller: _minRateController, // Pass the controller
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true), // Set keyboard
+                        inputFormatters: [ // Enforce number format
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                      ),
                       const SizedBox(height: 20),
-                      _buildLabel("Maximum Range per hour (PHP/hour)"),
-                      const SizedBox(height: 10),
-                      _buildTextField("PHP 10000.00", _maxRateController),
+                      SetupTextField(
+                        label: "Maximum Range per hour (PHP/hour)",
+                        hint: "PHP 10000.00",
+                        controller: _maxRateController, // Pass the controller
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true), // Set keyboard
+                        inputFormatters: [ // Enforce number format
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
 
-              // --- 3. FOOTER (Stays at the bottom) ---
+              // Add a little space before the buttons
               const SizedBox(height: 20),
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _goToNextStep, // Calls navigation function
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _goToNextStep, // Calls navigation function
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+
+              // --- 3. FOOTER ---
+              // Replaced the button Column
+              SetupButtonFooter(
+                onNext: _goToNextStep,
+                onSkip: _goToNextStep,
               ),
             ],
           ),

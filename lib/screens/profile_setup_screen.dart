@@ -1,8 +1,15 @@
+// Import necessary packages for Flutter UI, image picking, and file handling
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+// Import the next screen in the setup flow
 import 'expertise_setup_screen.dart';
 
+// Import the reusable widgets. This import path ('../') goes up one directory.
+import '../widgets/common_widgets.dart';
+
+// This is a StatefulWidget because its state needs to change (to store the selected image)
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -11,9 +18,13 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+  // A nullable 'File' variable to store the path of the image the user picks.
   File? _image;
+  
+  // An instance of ImagePicker to handle opening the gallery
   final picker = ImagePicker();
 
+  /// Asynchronous function to open the device's image gallery and pick an image.
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -23,11 +34,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  /// Navigates the user to the next step in the profile setup
   void _goToNextStep() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:(context) => const ExpertiseSetupScreen(),
+        builder: (context) => const ExpertiseSetupScreen(),
       ),
     );
   }
@@ -42,80 +54,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // TURO Logo / Title
-              Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              
+              // --- 1. Reusable Header ---
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-
-              // Progress text
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Complete your profile",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 1 out of 6",
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Progress bar
-              Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1B4D44),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  ...List.generate(
-                    5,
-                    (index) => Expanded(
-                      flex: 1,
-                      child: Container(
-                        margin: EdgeInsets.only(left: 4),
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const SetupProgressHeader(
+                title: "Complete your profile",
+                currentStep: 1,
               ),
               const SizedBox(height: 40),
 
-              // Image placeholder / preview
+              // --- 2. Screen-Specific Content ---
               Center(
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 60,
-                    backgroundColor: Color(0xFF1B4D44),
+                    backgroundColor: const Color(0xFF1B4D44),
                     child: _image == null
-                        ? Icon(Icons.camera_alt, color: Colors.white, size: 45)
+                        ? const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 45)
                         : ClipOval(
                             child: Image.file(
                               _image!,
@@ -128,12 +86,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Title and description
+              
+              // --- THIS IS THE FIX ---
+              // Removed 'const' from 'Center' because its child
+              // 'Text' widget uses 'Colors.grey[600]', which is not constant.
               Center(
                 child: Column(
                   children: [
-                    Text(
+                    const Text(
                       "Upload your Profile Picture",
                       style: TextStyle(
                         fontSize: 18,
@@ -141,7 +101,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    Text( // This widget is not constant
                       "Make sure that it looks professional!",
                       style: TextStyle(
                         color: Colors.grey[600],
@@ -152,8 +112,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Upload button (textfield style)
+              
+              // This 'Text' also uses a non-constant color
               Text(
                 "Choose your profile picture",
                 style: TextStyle(
@@ -166,52 +126,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 onTap: _pickImage,
                 child: Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 14),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.shade400),
                   ),
+                  // This 'Text' is also not constant because it depends on a variable
                   child: Text(
                     _image == null ? "Upload your picture" : "Picture selected",
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
+              
               const Spacer(),
 
-              // Buttons
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _goToNextStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _goToNextStep,
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+              // --- 3. Reusable Footer ---
+              SetupButtonFooter(
+                onNext: _goToNextStep,
+                onSkip: _goToNextStep,
               ),
             ],
           ),

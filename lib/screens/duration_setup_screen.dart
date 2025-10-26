@@ -1,6 +1,15 @@
+// Import Flutter's material library
 import 'package:flutter/material.dart';
+
+// Import the next screen in the flow
 import 'rates_setup_screen.dart';
 
+// Import your new reusable widgets
+import '../widgets/common_widgets.dart';
+
+/// Step 4 of the profile setup: "Select duration."
+/// This is a StatefulWidget because it needs to store the state
+/// of the checkboxes.
 class DurationSetupScreen extends StatefulWidget {
   const DurationSetupScreen({super.key});
 
@@ -16,71 +25,38 @@ class _DurationSetupScreenState extends State<DurationSetupScreen> {
     'Milestone-based Mentorship',
   ];
 
-  // 2. Map to store the checked state of each option
+  // 2. Map to store the checked state (true/false) of each option
   Map<String, bool> _selectedDurations = {};
 
+  /// This function runs once when the widget is first created.
   @override
   void initState() {
     super.initState();
-    // 3. Initialize the map
+    // 3. Initialize the map, setting all options to 'false' (unchecked)
     _selectedDurations = {
       for (var option in _durationOptions) option: false
     };
   }
 
-  // 4. Helper method to build each custom checkbox tile
-  Widget _buildDurationTile(String duration) {
-    return GestureDetector(
-      onTap: () {
-        // Toggle the state when the row is tapped
-        setState(() {
-          _selectedDurations[duration] = !_selectedDurations[duration]!;
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade400),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              duration,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[800],
-              ),
-            ),
-            Checkbox(
-              value: _selectedDurations[duration],
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _selectedDurations[duration] = newValue!;
-                });
-              },
-              activeColor: const Color(0xFF1B4D44), // Your brand color
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // 4. We no longer need the _buildDurationTile method,
+  //    as this logic is now inside `SetupCheckboxTile`.
 
-  // Function to navigate to the next step
+  /// Navigates the user to the next step (RatesSetupScreen)
   void _goToNextStep() {
+    // First, find all the items that the user checked
     final selected = _selectedDurations.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
-    print("Selected durations: $selected");
+        .where((entry) => entry.value) // Filter for true values
+        .map((entry) => entry.key) // Get the name (key)
+        .toList(); // Convert to a list
     
+    // Print the list to the debug console
+    print("Selected durations: $selected");
+
+    // Navigate to the next screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const RatesSetupScreen(), // <-- CHANGE TO THIS
+        builder: (context) => const RatesSetupScreen(),
       ),
     );
   }
@@ -95,52 +71,15 @@ class _DurationSetupScreenState extends State<DurationSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. HEADER (Stays at the top) ---
-              const Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              // --- 1. HEADER ---
+              // Replaced the "TURO" Text widget
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Select duration.", // <-- UPDATED
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 4 out of 6", // <-- UPDATED
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: List.generate(6, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 5,
-                      margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                      decoration: BoxDecoration(
-                        // Fill 4 segments (index 0, 1, 2, 3)
-                        color: index < 4 // <-- UPDATED
-                            ? const Color(0xFF1B4D44)
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
+
+              // Replaced the progress Row widgets
+              const SetupProgressHeader(
+                title: "Select duration.", // <-- Updated title
+                currentStep: 4, // <-- Updated step
               ),
               const SizedBox(height: 40),
 
@@ -149,29 +88,26 @@ class _DurationSetupScreenState extends State<DurationSetupScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Center(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFF1B4D44),
-                          // This icon matches your design
-                          child: const Icon(Icons.timer_outlined, // <-- UPDATED ICON
-                              color: Colors.white, size: 45),
-                        ),
-                      ),
+                      // Replaced the Center(CircleAvatar(...))
+                      const SetupScreenIcon(icon: Icons.timer_outlined), // <-- Updated icon
                       const SizedBox(height: 30),
+
+                      // This part is specific to this screen (title/subtitle)
                       Center(
                         child: Column(
                           children: [
                             const Text(
-                              "Mentorship Duration", // <-- UPDATED
+                              "Mentorship Duration",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 6),
+                            // Removed 'const' because TextStyle uses non-constant Colors.grey[600]
                             Text(
-                              "Select below the duration you aim for the mentorship", // <-- UPDATED
+                              "Select below the duration you aim for the mentorship",
+                              textAlign: TextAlign.center, // Added for potential wrapping
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -181,51 +117,46 @@ class _DurationSetupScreenState extends State<DurationSetupScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
+
+                      // --- Checkbox List ---
+                      // Map over the options list and create a reusable SetupCheckboxTile for each one
                       Column(
-                        // Use the new options and builder function
-                        children: _durationOptions
-                            .map((duration) => _buildDurationTile(duration))
-                            .toList(),
+                        children: _durationOptions.map((duration) {
+                          return SetupCheckboxTile(
+                            label: duration,
+                            value: _selectedDurations[duration]!, // The current checked state
+                            
+                            // Runs when the checkbox is tapped
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                _selectedDurations[duration] = newValue!;
+                              });
+                            },
+                            
+                            // Runs when the whole row is tapped
+                            onTap: () {
+                              setState(() {
+                                // Toggle the value
+                                _selectedDurations[duration] =
+                                    !_selectedDurations[duration]!;
+                              });
+                            },
+                          );
+                        }).toList(), // Convert the map to a list
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // --- 3. FOOTER (Stays at the bottom) ---
+              // Add a little space before the buttons
               const SizedBox(height: 20),
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _goToNextStep, // <-- Calls navigation function
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _goToNextStep, // <-- Calls navigation function
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+
+              // --- 3. FOOTER ---
+              // Replaced the button Column
+              SetupButtonFooter(
+                onNext: _goToNextStep,
+                onSkip: _goToNextStep,
               ),
             ],
           ),

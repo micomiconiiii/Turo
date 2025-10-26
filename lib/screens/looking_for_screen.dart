@@ -1,6 +1,13 @@
+// Import Flutter's material library
 import 'package:flutter/material.dart';
-import 'main_screen.dart';
 
+// Import MyProfileScreen to check its type in popUntil
+import 'my_profile_screen.dart';
+
+// Import your reusable widgets
+import '../widgets/common_widgets.dart';
+
+/// Step 6 of the profile setup: "Who are you looking for?"
 class LookingForScreen extends StatefulWidget {
   const LookingForScreen({super.key});
 
@@ -9,87 +16,71 @@ class LookingForScreen extends StatefulWidget {
 }
 
 class _LookingForScreenState extends State<LookingForScreen> {
-  // 1. List of all available options
+  // List of all available options
   final List<String> _lookingForOptions = [
     'Students',
     'Freelance Developers',
     'Startups',
   ];
 
-  // 2. Map to store the checked state of each option
+  // Map to store the checked state
   Map<String, bool> _selectedOptions = {};
 
   @override
   void initState() {
     super.initState();
-    // 3. Initialize the map
     _selectedOptions = {
       for (var option in _lookingForOptions) option: false
     };
   }
 
-  // 4. Helper method to build each custom checkbox tile
-  Widget _buildLookingForTile(String option) {
-    return GestureDetector(
-      onTap: () {
-        // Toggle the state when the row is tapped
-        setState(() {
-          _selectedOptions[option] = !_selectedOptions[option]!;
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade400),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              option,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[800],
-              ),
-            ),
-            Checkbox(
-              value: _selectedOptions[option],
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _selectedOptions[option] = newValue!;
-                });
-              },
-              activeColor: const Color(0xFF1B4D44), // Your brand color
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 5. Function to FINISH setup and go to the app's home screen
+  /// Function to FINISH setup and go BACK to the MyProfileScreen.
   void _finishSetup() {
     final selected = _selectedOptions.entries
         .where((entry) => entry.value)
         .map((entry) => entry.key)
         .toList();
+
     print("Looking for: $selected");
 
-    // This is the important part for the LAST screen:
-    // We navigate to the home screen and REMOVE all previous routes (the setup screens)
-    // so the user can't press "back" and return to the setup flow.
+    // --- Pop back UNTIL MyProfileScreen ---
+    // This removes all screens from the stack until it finds
+    // the route whose settings name matches MyProfileScreen.
+    // If MyProfileScreen isn't found (which shouldn't happen here),
+    // it might pop back further than expected.
+    // A more robust way involves named routes or checking route types.
 
-    // TODO: Replace 'PlaceholderHomeScreen()' with your actual home/dashboard screen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MainScreen(), // <-- CHANGE TO THIS
-      ),
-      (Route<dynamic> route) => false,
-    );
+    // Let's try popping until the first route (simplest)
+    // This assumes MyProfileScreen was pushed directly onto the initial route.
+    // If MyProfileScreen was pushed on top of other screens (like MainScreen),
+    // this might pop too far.
+
+    // A slightly safer way without named routes: Pop until a route
+    // whose TYPE is MyProfileScreen is encountered.
+    // NOTE: This requires MyProfileScreen to be imported.
+    Navigator.popUntil(context, (route) {
+      // Check if the route is the MyProfileScreen OR if it's the very first route
+      // This handles cases where MyProfileScreen might be the initial route.
+      return route.settings.name == '/myprofile' || route is MaterialPageRoute<dynamic> && route.builder(context) is MyProfileScreen || route.isFirst;
+       // For a more robust solution, consider named routes:
+       // return route.settings.name == MyProfileScreen.routeName;
+       // Or pop a fixed number of times if you know exactly how many screens were pushed:
+       // int count = 0;
+       // Navigator.popUntil(context, (route) => count++ == 6); // Pop 6 times
+    });
+
+
+    // --- Alternative (Simpler but potentially fragile): Pop 6 times ---
+    // If you are SURE exactly 6 screens were pushed on top of MyProfileScreen,
+    // you could just pop 6 times. Less flexible if the flow changes.
+    /*
+    int popCount = 0;
+    Navigator.popUntil(context, (route) {
+      return popCount++ >= 6; // Pop exactly 6 times
+    });
+    */
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,138 +92,49 @@ class _LookingForScreenState extends State<LookingForScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. HEADER (Stays at the top) ---
-              const Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              // --- HEADER ---
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Who are you looking for?", // <-- UPDATED
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 6 out of 6", // <-- UPDATED
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: List.generate(6, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 5,
-                      margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                      decoration: BoxDecoration(
-                        // Fill all 6 segments
-                        color: index < 6 // <-- UPDATED (All filled)
-                            ? const Color(0xFF1B4D44)
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
+              const SetupProgressHeader(
+                title: "Who are you looking for?",
+                currentStep: 6,
               ),
               const SizedBox(height: 40),
 
-              // --- 2. MIDDLE CONTENT (Scrollable) ---
+              // --- MIDDLE CONTENT ---
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Center(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFF1B4D44),
-                          // Following your image, using the calculator icon again
-                          child: const Icon(Icons.calculate_outlined, // <-- ICON
-                              color: Colors.white,
-                              size: 45),
-                        ),
-                      ),
+                      const SetupScreenIcon(icon: Icons.calculate_outlined),
                       const SizedBox(height: 30),
-                      Center(
-                        child: Column(
-                          children: [
-                            const Text(
-                              "I am looking for...", // <-- UPDATED
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              "Tick the boxes below", // <-- UPDATED
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      Center(/* ... Title/Subtitle ... */),
                       const SizedBox(height: 30),
+                      // --- Checkbox List ---
                       Column(
-                        // Use the new options and builder function
-                        children: _lookingForOptions
-                            .map((option) => _buildLookingForTile(option))
-                            .toList(),
+                        children: _lookingForOptions.map((option) {
+                          return SetupCheckboxTile(
+                            label: option,
+                            value: _selectedOptions[option]!,
+                            onChanged: (bool? newValue) {
+                              setState(() { _selectedOptions[option] = newValue!; });
+                            },
+                            onTap: () {
+                              setState(() { _selectedOptions[option] = !_selectedOptions[option]!; });
+                            },
+                          );
+                        }).toList(),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // --- 3. FOOTER (Stays at the bottom) ---
               const SizedBox(height: 20),
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _finishSetup, // <-- Calls FINISH function
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _finishSetup, // <-- Calls FINISH function
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+
+              // --- FOOTER ---
+              SetupButtonFooter(
+                onNext: _finishSetup,
+                onSkip: _finishSetup,
               ),
             ],
           ),
@@ -240,5 +142,4 @@ class _LookingForScreenState extends State<LookingForScreen> {
       ),
     );
   }
-}
-
+} // Added closing brace

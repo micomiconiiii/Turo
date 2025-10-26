@@ -1,6 +1,15 @@
+// Import Flutter's material library
 import 'package:flutter/material.dart';
+
+// Import the next screen in the flow
 import 'duration_setup_screen.dart';
 
+// Import your new reusable widgets
+import '../widgets/common_widgets.dart';
+
+/// Step 3 of the profile setup: "What are your goals?"
+/// This is a StatefulWidget because it needs to store the state
+/// of the checkboxes.
 class GoalsSetupScreen extends StatefulWidget {
   const GoalsSetupScreen({super.key});
 
@@ -17,72 +26,36 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
     'Personal Growth',
   ];
 
-  // 2. Map to store the checked state of each option
+  // 2. Map to store the checked state (true/false) of each option
   Map<String, bool> _selectedGoals = {};
 
+  /// This function runs once when the widget is first created.
   @override
   void initState() {
     super.initState();
-    // 3. Initialize the map, setting all options to 'false' initially
-    _selectedGoals = {
-      for (var option in _goalOptions) option: false
-    };
+    // 3. Initialize the map, setting all options to 'false' (unchecked)
+    _selectedGoals = {for (var option in _goalOptions) option: false};
   }
 
-  // 4. Helper method to build each custom checkbox tile
-  Widget _buildGoalTile(String goal) {
-    return GestureDetector(
-      onTap: () {
-        // Toggle the state when the row is tapped
-        setState(() {
-          _selectedGoals[goal] = !_selectedGoals[goal]!;
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade400),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              goal,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[800],
-              ),
-            ),
-            Checkbox(
-              value: _selectedGoals[goal],
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _selectedGoals[goal] = newValue!;
-                });
-              },
-              activeColor: const Color(0xFF1B4D44), // Your brand color
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // 4. We no longer need the _buildGoalTile method, 
+  //    as this logic is now inside `SetupCheckboxTile`.
 
-  // Function to navigate to the next step
+  /// Navigates the user to the next step (DurationSetupScreen)
   void _goToNextStep() {
+    // First, find all the items that the user checked
     final selected = _selectedGoals.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+        .where((entry) => entry.value) // Filter for true values
+        .map((entry) => entry.key) // Get the name (key)
+        .toList(); // Convert to a list
+    
+    // Print the list to the debug console
     print("Selected goals: $selected");
 
-    // UPDATE THIS NAVIGATION:
+    // Navigate to the next screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const DurationSetupScreen(), // <-- CHANGE TO THIS
+        builder: (context) => const DurationSetupScreen(),
       ),
     );
   }
@@ -97,52 +70,15 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. HEADER (Stays at the top) ---
-              const Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              // --- 1. HEADER ---
+              // Replaced the "TURO" Text widget
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "What are your goals?", // <-- UPDATED
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 3 out of 6", // <-- UPDATED
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: List.generate(6, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 5,
-                      margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                      decoration: BoxDecoration(
-                        // Fill 3 segments (index 0, 1, 2)
-                        color: index < 3 // <-- UPDATED
-                            ? const Color(0xFF1B4D44)
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
+
+              // Replaced the progress Row widgets
+              const SetupProgressHeader(
+                title: "What are your goals?", // <-- Updated title
+                currentStep: 3, // <-- Updated step
               ),
               const SizedBox(height: 40),
 
@@ -151,29 +87,25 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Center(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFF1B4D44),
-                          // This icon matches your design
-                          child: const Icon(Icons.assignment_ind_outlined, // <-- UPDATED ICON
-                              color: Colors.white, size: 45),
-                        ),
-                      ),
+                      // Replaced the Center(CircleAvatar(...))
+                      const SetupScreenIcon(icon: Icons.assignment_ind_outlined), // <-- Updated icon
                       const SizedBox(height: 30),
+
+                      // This part is specific to this screen (title/subtitle)
                       Center(
                         child: Column(
                           children: [
                             const Text(
-                              "Mentorship Goals", // <-- UPDATED
+                              "Mentorship Goals",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 6),
+                            // Removed 'const' because TextStyle uses non-constant Colors.grey[600]
                             Text(
-                              "Select the goals you want to focus on.", // <-- REVISED SUBTITLE
+                              "Select the goals you want to focus on.",
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -183,51 +115,46 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
+
+                      // --- Checkbox List ---
+                      // Map over the options list and create a reusable SetupCheckboxTile for each one
                       Column(
-                        // Use the new options and builder function
-                        children: _goalOptions
-                            .map((goal) => _buildGoalTile(goal))
-                            .toList(),
+                        children: _goalOptions.map((goal) {
+                          return SetupCheckboxTile(
+                            label: goal,
+                            value: _selectedGoals[goal]!, // The current checked state
+                            
+                            // Runs when the checkbox is tapped
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                _selectedGoals[goal] = newValue!;
+                              });
+                            },
+                            
+                            // Runs when the whole row is tapped
+                            onTap: () {
+                              setState(() {
+                                // Toggle the value
+                                _selectedGoals[goal] =
+                                    !_selectedGoals[goal]!;
+                              });
+                            },
+                          );
+                        }).toList(), // Convert the map to a list
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // --- 3. FOOTER (Stays at the bottom) ---
+              // Add a little space before the buttons
               const SizedBox(height: 20),
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _goToNextStep, // <-- Calls navigation function
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _goToNextStep, // <-- Calls navigation function
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+
+              // --- 3. FOOTER ---
+              // Replaced the button Column
+              SetupButtonFooter(
+                onNext: _goToNextStep,
+                onSkip: _goToNextStep,
               ),
             ],
           ),

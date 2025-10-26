@@ -1,6 +1,15 @@
+// Import Flutter's material library
 import 'package:flutter/material.dart';
+
+// Import the next screen in the flow
 import 'goals_setup_screen.dart';
 
+// Import your new reusable widgets
+import '../widgets/common_widgets.dart';
+
+/// Step 2 of the profile setup: "What are your expertise?"
+/// This is a StatefulWidget because it needs to store the state
+/// of the checkboxes.
 class ExpertiseSetupScreen extends StatefulWidget {
   const ExpertiseSetupScreen({super.key});
 
@@ -9,26 +18,41 @@ class ExpertiseSetupScreen extends StatefulWidget {
 }
 
 class _ExpertiseSetupScreenState extends State<ExpertiseSetupScreen> {
+  // 1. List of all available expertise options
   final List<String> _expertiseOptions = [
     'Software Technology',
     'Entrepreneurship',
     'Digital Marketing',
     'App Development',
     'Business Intelligence',
-    // You could even add more here, and it would still work
-    // 'Data Science',
-    // 'UI/UX Design',
-    // 'Project Management',
   ];
 
+  // 2. Map to store the checked state (true/false) of each option
+  Map<String, bool> _selectedExpertise = {};
+
+  /// This function runs once when the widget is first created.
+  @override
+  void initState() {
+    super.initState();
+    // 3. Initialize the map, setting all options to 'false' (unchecked)
+    _selectedExpertise = {
+      for (var option in _expertiseOptions) option: false
+    };
+  }
+
+  /// Navigates the user to the next step (GoalsSetupScreen)
   void _goToNextStep() {
+    // First, find all the items that the user checked (where value is true)
     final selected = _selectedExpertise.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+        .where((entry) => entry.value) // Filter for true values
+        .map((entry) => entry.key) // Get the name (key)
+        .toList(); // Convert to a list
+    
+    // Print the list to the debug console
     print("Selected expertise: $selected");
 
-    Navigator.push( // <-- ADD THIS NAVIGATION
+    // Navigate to the next screen
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const GoalsSetupScreen(),
@@ -36,54 +60,8 @@ class _ExpertiseSetupScreenState extends State<ExpertiseSetupScreen> {
     );
   }
   
-  Map<String, bool> _selectedExpertise = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedExpertise = {
-      for (var option in _expertiseOptions) option: false
-    };
-  }
-
-  Widget _buildExpertiseTile(String expertise) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedExpertise[expertise] = !_selectedExpertise[expertise]!;
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade400),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              expertise,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[800],
-              ),
-            ),
-            Checkbox(
-              value: _selectedExpertise[expertise],
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _selectedExpertise[expertise] = newValue!;
-                });
-              },
-              activeColor: const Color(0xFF1B4D44),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // 4. We no longer need the _buildExpertiseTile method, 
+  //    as this logic is now inside `SetupCheckboxTile` in common_widgets.dart
 
   @override
   Widget build(BuildContext context) {
@@ -95,68 +73,28 @@ class _ExpertiseSetupScreenState extends State<ExpertiseSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. HEADER (Stays at the top) ---
-              const Text(
-                "TURO",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              // --- 1. HEADER ---
+              // Replaced the "TURO" Text widget with your common widget
+              const TuroLogoHeader(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "What are your expertise?",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "Step 2 out of 6",
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: List.generate(6, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 5,
-                      margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                      decoration: BoxDecoration(
-                        color: index < 2
-                            ? const Color(0xFF1B4D44)
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                }),
+
+              // Replaced the progress Row widgets with your common header
+              const SetupProgressHeader(
+                title: "What are your expertise?",
+                currentStep: 2, // This is Step 2
               ),
               const SizedBox(height: 40),
 
-              // --- 2. MIDDLE CONTENT (Now scrollable) ---
-              Expanded( // <-- WIDGET 1: ADD THIS
-                child: SingleChildScrollView( // <-- WIDGET 2: ADD THIS
+              // --- 2. MIDDLE CONTENT (Scrollable) ---
+              Expanded(
+                child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Center(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFF1B4D44),
-                          child: const Icon(Icons.science_outlined,
-                              color: Colors.white, size: 45),
-                        ),
-                      ),
+                      // Replaced the Center(CircleAvatar(...)) with your common icon widget
+                      const SetupScreenIcon(icon: Icons.science_outlined),
                       const SizedBox(height: 30),
+
+                      // This part is specific to this screen (title/subtitle)
                       Center(
                         child: Column(
                           children: [
@@ -168,6 +106,7 @@ class _ExpertiseSetupScreenState extends State<ExpertiseSetupScreen> {
                               ),
                             ),
                             const SizedBox(height: 6),
+                            // Removed 'const' because TextStyle uses non-constant Colors.grey[600]
                             Text(
                               "Tick the boxes below that match your expertise.",
                               style: TextStyle(
@@ -179,52 +118,47 @@ class _ExpertiseSetupScreenState extends State<ExpertiseSetupScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
+
+                      // --- Checkbox List ---
+                      // We map over our list of options and build a
+                      // SetupCheckboxTile for each one.
                       Column(
-                        children: _expertiseOptions
-                            .map((expertise) => _buildExpertiseTile(expertise))
-                            .toList(),
+                        children: _expertiseOptions.map((expertise) {
+                          return SetupCheckboxTile(
+                            label: expertise,
+                            value: _selectedExpertise[expertise]!, // The current checked state
+                            
+                            // This runs when the user taps the checkbox directly
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                _selectedExpertise[expertise] = newValue!;
+                              });
+                            },
+                            
+                            // This runs when the user taps the whole row
+                            onTap: () {
+                              setState(() {
+                                // Toggle the value
+                                _selectedExpertise[expertise] =
+                                    !_selectedExpertise[expertise]!;
+                              });
+                            },
+                          );
+                        }).toList(), // Convert the mapped items into a list of widgets
                       ),
                     ],
                   ),
                 ),
               ),
-              
-              // const Spacer(), // <-- REMOVE THE SPACER, 'Expanded' replaces it.
 
-              // --- 3. FOOTER (Stays at the bottom) ---
-              const SizedBox(height: 20), // Add a little space before the buttons
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _goToNextStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B4D44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _goToNextStep,
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(color: Colors.grey[800]),
-                    ),
-                  ),
-                ],
+              // Add a little space before the buttons
+              const SizedBox(height: 20), 
+
+              // --- 3. FOOTER ---
+              // Replaced the button Column with your common footer widget
+              SetupButtonFooter(
+                onNext: _goToNextStep,
+                onSkip: _goToNextStep,
               ),
             ],
           ),
