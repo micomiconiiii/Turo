@@ -17,15 +17,14 @@ class MentorRegistrationScreen extends StatelessWidget {
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
 
-  MentorRegistrationScreen({Key? key}) : super(key: key);
+  MentorRegistrationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appTheme.white_A700,
-      resizeToAvoidBottomInset: true, // ✅ adjusts when keyboard appears
+      resizeToAvoidBottomInset: true,
 
-      // ✅ Fixed bottom button
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(bottom: 16.h, left: 20.h, right: 20.h),
@@ -44,7 +43,7 @@ class MentorRegistrationScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // ✅ prevents top stretch
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // ---- HEADER ----
                 Text(
@@ -71,30 +70,24 @@ class MentorRegistrationScreen extends StatelessWidget {
 
                 // ---- PROGRESS BAR ----
                 SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    _buildProgressSegment(filled: true),
-                    SizedBox(width: 2.h),
-                    _buildProgressSegment(filled: false),
-                    SizedBox(width: 2.h),
-                    Expanded(
-                      child: Row(
-                        children: List.generate(
-                          4,
-                          (i) => Expanded(
-                            child: Container(
-                              height: 6.h,
-                              margin: EdgeInsets.only(right: i == 3 ? 0 : 2.h),
-                              decoration: BoxDecoration(
-                                color: appTheme.blue_gray_100,
-                                borderRadius: BorderRadius.circular(3.h),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                SizedBox(
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildProgressSegment(filled: true),
+                      SizedBox(width: 2.h),
+                      _buildProgressSegment(filled: false),
+                      SizedBox(width: 2.h),
+                      _buildProgressSegment(filled: false),
+                      SizedBox(width: 2.h),
+                      _buildProgressSegment(filled: false),
+                      SizedBox(width: 2.h),
+                      _buildProgressSegment(filled: false),
+                      SizedBox(width: 2.h),
+                      _buildProgressSegment(filled: false),
+                    ],
+                  ),
                 ),
 
                 // ---- PROFILE ICON ----
@@ -158,7 +151,6 @@ class MentorRegistrationScreen extends StatelessWidget {
                   validator: _validateAddress,
                   keyboardType: TextInputType.streetAddress,
                 ),
-                // City field using typeahead widget
                 Container(
                   margin: EdgeInsets.only(top: 10.h),
                   child: Column(
@@ -180,7 +172,7 @@ class MentorRegistrationScreen extends StatelessWidget {
                   keyboardType: TextInputType.number,
                 ),
 
-                SizedBox(height: 80.h), // ✅ space before fixed button
+                SizedBox(height: 80.h),
               ],
             ),
           ),
@@ -189,7 +181,6 @@ class MentorRegistrationScreen extends StatelessWidget {
     );
   }
 
-  // ---- FIELD BUILDERS ----
   Widget _buildProgressSegment({required bool filled}) {
     return Container(
       height: 6.h,
@@ -254,7 +245,6 @@ class MentorRegistrationScreen extends StatelessWidget {
     );
   }
 
-  // ---- VALIDATION ----
   String? _validateFullName(String? value) {
     if (value?.isEmpty == true) return 'Full name is required';
     return null;
@@ -281,19 +271,19 @@ class MentorRegistrationScreen extends StatelessWidget {
     if (year == null || year < 1900 || year > currentYear) return 'Enter valid year';
     return null;
   }
- String? _validateZipCode(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'Zip Code is required';
-  }
 
-  // 🔍 Check if contains only digits
-  final numericRegex = RegExp(r'^[0-9]+$');
-  if (!numericRegex.hasMatch(value)) {
-    return 'Zip Code must contain numbers only';
-  }
+  String? _validateZipCode(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Zip Code is required';
+    }
 
-  return null; // valid input
-}
+    final numericRegex = RegExp(r'^[0-9]+$');
+    if (!numericRegex.hasMatch(value)) {
+      return 'Zip Code must contain numbers only';
+    }
+
+    return null;
+  }
 
   String? _validateBio(String? value) {
     if (value?.isEmpty == true) return 'Bio is required';
@@ -306,10 +296,9 @@ class MentorRegistrationScreen extends StatelessWidget {
     return null;
   }
 
-  // ---- ACTIONS ----
-void _onNextPressed(BuildContext context) {
+  void _onNextPressed(BuildContext context) {
     if (_formKey.currentState?.validate() == true) {
-      // TODO: Save form data
+      _clearForm();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -318,7 +307,11 @@ void _onNextPressed(BuildContext context) {
         ),
       );
 
-      Navigator.pushNamed(context, AppRoutes.institutionalVerificationScreen);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => InstitutionalVerificationScreen(),
+        ),
+      );
     }
   }
 

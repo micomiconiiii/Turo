@@ -30,7 +30,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
       final otpService = CustomFirebaseOtpService();
       final emailAddress = _emailController.text;
       
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -38,13 +37,10 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
       );
       
       try {
-        final success = await otpService.requestEmailOTP(emailAddress);
-        
-        // Hide loading indicator
+        final success = await CustomFirebaseOtpService.requestEmailOTP(emailAddress);
         Navigator.pop(context);
         
         if (success) {
-          // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('OTP sent to $emailAddress'),
@@ -58,7 +54,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
             ),
           );
         } else {
-          // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to send OTP. Please try again.'),
@@ -67,7 +62,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
           );
         }
       } catch (e) {
-        // Hide loading indicator and show error
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -80,12 +74,11 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
   }
 
   void _onSkipPressed() {
-    // TODO: Navigate to next screen
     Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => IdUploadScreen(),
-        ),
-      );
+      MaterialPageRoute(
+        builder: (context) => IdUploadScreen(),
+      ),
+    );
   }
 
   @override
@@ -104,6 +97,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -125,35 +119,24 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 ],
               ),
 
-              // ---- PROGRESS BAR ----
               SizedBox(height: 8.h),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
-                  Expanded(
-                    child: Row(
-                      children: List.generate(
-                        4,
-                        (i) => Expanded(
-                          child: Container(
-                            height: 6.h,
-                            margin: EdgeInsets.only(right: i == 3 ? 0 : 2.h),
-                            decoration: BoxDecoration(
-                              color: appTheme.blue_gray_100,
-                              borderRadius: BorderRadius.circular(3.h),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildProgressSegment(filled: false),
+                  SizedBox(width: 2.h),
+                  _buildProgressSegment(filled: false),
+                  SizedBox(width: 2.h),
+                  _buildProgressSegment(filled: false),
+                  SizedBox(width: 2.h),
+                  _buildProgressSegment(filled: false),
                 ],
               ),
 
-              // ---- PROFILE ICON ----
               SizedBox(height: 24.h),
               Center(
                 child: Container(
@@ -173,7 +156,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 ),
               ),
 
-              // ---- TITLE ----
               SizedBox(height: 12.h),
               Center(
                 child: Text(
@@ -188,11 +170,11 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 ),
               ),
 
-              // ---- FORM ----
               SizedBox(height: 32.h),
               Form(
                 key: _formKey,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     CustomEditText(
                       controller: _institutionController,
@@ -216,11 +198,9 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                         if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
-                        // Get the domain from the email (part after @)
                         final domain = value.split('@').last.toLowerCase();
-                        // List of commonly known personal email domains
                         final personalDomains = [
-                          'gmail.com', 'yahoo.com', 'hotmail.com',
+                          'gmail.com', 'yahoo.com', 'hotmail.com', 
                           'outlook.com', 'icloud.com', 'aol.com'
                         ];
                         if (personalDomains.contains(domain)) {
@@ -250,6 +230,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 onPressed: _onSendOTPPressed,
                 backgroundColor: appTheme.blue_gray_700,
                 textColor: Colors.white,
+                margin: EdgeInsets.zero,
               ),
               SizedBox(height: 16.h),
               CustomButton(
@@ -257,6 +238,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 onPressed: _onSkipPressed,
                 backgroundColor: Colors.transparent,
                 textColor: appTheme.blue_gray_700,
+                margin: EdgeInsets.zero,
               ),
             ],
           ),
