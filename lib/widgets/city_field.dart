@@ -9,11 +9,11 @@ class CityField extends StatefulWidget {
   final String? hintText;
 
   const CityField({
-    Key? key,
+    super.key,
     this.controller,
     this.label,
     this.hintText,
-  }) : super(key: key);
+  });
 
   @override
   State<CityField> createState() => _CityFieldState();

@@ -4,7 +4,7 @@ import '../core/app_export.dart';
 /// CustomEditText - Reusable text input field with dynamic text color on focus/typing
 class CustomEditText extends StatefulWidget {
   const CustomEditText({
-    Key? key,
+    super.key,
     this.placeholder,
     this.validator,
     this.keyboardType,
@@ -13,7 +13,7 @@ class CustomEditText extends StatefulWidget {
     this.controller,
     this.onChanged,
     this.enabled,
-  }) : super(key: key);
+  });
 
   final String? placeholder;
   final String? Function(String?)? validator;

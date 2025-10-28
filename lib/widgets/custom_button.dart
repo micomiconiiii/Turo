@@ -23,8 +23,8 @@ import '../core/app_export.dart';
 /// - [margin]: External margin around the button
 /// - [padding]: Internal padding of the button
 class CustomButton extends StatelessWidget {
-  CustomButton({
-    Key? key,
+  const CustomButton({
+    super.key,
     this.text,
     this.onPressed,
     this.backgroundColor,
@@ -35,7 +35,7 @@ class CustomButton extends StatelessWidget {
     this.isDisabled,
     this.margin,
     this.padding,
-  }) : super(key: key);
+  });
 
   final String? text;
   final VoidCallback? onPressed;
@@ -78,3 +78,4 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+  

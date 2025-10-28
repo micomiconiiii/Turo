@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/app_export.dart';
-import '../../routes/app_routes.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
@@ -308,9 +307,9 @@ class MentorRegistrationScreen extends StatelessWidget {
   }
 
   // ---- ACTIONS ----
-  void _onNextPressed(BuildContext context) {
+void _onNextPressed(BuildContext context) {
     if (_formKey.currentState?.validate() == true) {
-      _clearForm();
+      // TODO: Save form data
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -319,7 +318,7 @@ class MentorRegistrationScreen extends StatelessWidget {
         ),
       );
 
-      Navigator.pushNamed(context, AppRoutes.idVerificationScreen);
+      Navigator.pushNamed(context, AppRoutes.institutionalVerificationScreen);
     }
   }
 

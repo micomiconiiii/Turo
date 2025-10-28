@@ -32,6 +32,8 @@ dependencies:
   flutter:
     sdk: flutter
   file_picker: ^8.1.2
+  universal_io: ^2.2.2
+
   flutter_typeahead: ^5.2.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -41,13 +43,23 @@ dependencies:
   device_preview: ^1.3.1
   mailer: ^6.0.1
   http: ^1.1.0
-  firebase_core: ^2.15.1
   cloud_functions: ^4.4.0
-  firebase_storage: ^11.2.6
+  
+    # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.3.7
+  firebase_dynamic_links: ^5.0.11
+  uni_links: ^0.5.1
+  image_picker: ^1.0.4
+  pinput: ^4.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  build_runner: ^2.4.7
+  mockito: ^5.4.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -96,3 +108,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+dependency_overrides:
+  firebase_storage_web: ^3.6.23
+  web: ^0.5.1

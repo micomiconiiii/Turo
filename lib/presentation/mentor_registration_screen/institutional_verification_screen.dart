@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:turo/presentation/mentor_registration_screen/id_upload_screen.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../widgets/custom_button.dart';
-import '../../services/otp_service.dart';
+import '../../services/custom_firebase_otp_service.dart';
 import './otp_verification_screen.dart';
 
 enum ButtonVariant {
@@ -12,7 +13,7 @@ enum ButtonVariant {
 }
 
 class InstitutionalVerificationScreen extends StatefulWidget {
-  const InstitutionalVerificationScreen({Key? key}) : super(key: key);
+  const InstitutionalVerificationScreen({super.key});
 
   @override
   State<InstitutionalVerificationScreen> createState() => _InstitutionalVerificationScreenState();
@@ -26,7 +27,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
 
   void _onSendOTPPressed() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final otpService = OtpService();
+      final otpService = CustomFirebaseOtpService();
       final emailAddress = _emailController.text;
       
       // Show loading indicator
@@ -37,7 +38,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
       );
       
       try {
-        final success = await otpService.sendOtp(emailAddress);
+        final success = await otpService.requestEmailOTP(emailAddress);
         
         // Hide loading indicator
         Navigator.pop(context);
@@ -80,7 +81,11 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
 
   void _onSkipPressed() {
     // TODO: Navigate to next screen
-    print('Skip pressed');
+    Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => IdUploadScreen(),
+        ),
+      );
   }
 
   @override
@@ -215,7 +220,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                         final domain = value.split('@').last.toLowerCase();
                         // List of commonly known personal email domains
                         final personalDomains = [
-                          'gmail.com', 'yahoo.com', 'hotmail.com', 
+                          'gmail.com', 'yahoo.com', 'hotmail.com',
                           'outlook.com', 'icloud.com', 'aol.com'
                         ];
                         if (personalDomains.contains(domain)) {
@@ -271,4 +276,3 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
     );
   }
 }
-

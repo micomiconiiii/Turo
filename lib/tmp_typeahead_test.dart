@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class TmpTypeAheadExample extends StatelessWidget {
-  const TmpTypeAheadExample({Key? key}) : super(key: key);
+  const TmpTypeAheadExample({super.key});
 
   @override
   Widget build(BuildContext context) {

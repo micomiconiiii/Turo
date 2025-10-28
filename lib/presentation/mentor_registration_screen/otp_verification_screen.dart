@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../services/otp_service.dart';
+import 'package:turo/services/custom_firebase_otp_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../core/app_export.dart';
-import './id_verification.dart';
+import './id_upload_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
@@ -13,70 +13,103 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final otpController = TextEditingController();
-  late final otpService = OtpService();
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _otpController = TextEditingController();
+  final otpService = CustomFirebaseOtpService();
 
- Future<void> _onVerifyPressed() async {
-  final otp = otpController.text.trim();
+  void _onVerifyOTPPressed() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      final otp = _otpController.text;
 
-  if (otp.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter your OTP')),
-    );
-    return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final success = await otpService.verifyEmailOTP(widget.email, otp);
+
+        Navigator.pop(context); // Hide loading indicator
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email verified successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => IdUploadScreen(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid or expired OTP. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        Navigator.pop(context); // Hide loading indicator
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
-
-  // ✅ FIXED: Added 'await'
-  final isValid = await otpService.verifyOtp(widget.email, otp);
-
-  Navigator.pop(context);
-
-  if (isValid) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP verified successfully!')),
-    );
-    Navigator.pushReplacement(
-     context,
-     MaterialPageRoute(
-       builder: (context) => const IdUploadScreen(),
-     ),
-   );
-    // TODO: Navigate to next registration step
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invalid or expired OTP')),
-    );
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
+      appBar: AppBar(title: const Text('THIS IS THE OTP SCREEN')),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text('An OTP was sent to ${widget.email}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: otpController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Enter OTP'),
-            ),
-            const SizedBox(height: 16),
-            CustomButton(
-              text: 'Verify OTP',
-              onPressed: _onVerifyPressed,
-              backgroundColor: appTheme.blue_gray_700,
-              textColor: Colors.white,),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('An OTP has been sent to ${widget.email}'),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _otpController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter OTP',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the OTP';
+                  }
+                  if (value.length != 6) {
+                    return 'OTP must be 6 digits';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              CustomButton(
+                text: 'Verify',
+                onPressed: _onVerifyOTPPressed,
+                backgroundColor: appTheme.blue_gray_700,
+                textColor: Colors.white,
+              ),
+            ],
+          ),
         ),
       ),
     );
