@@ -1,0 +1,21 @@
+{"flutter":
+{"platforms":
+{"android":
+{"default":
+{"projectId":"turo-31805",
+    "appId":"1:507188440079:android:1c65aa522452d0b443877a",
+    "fileOutput":"android/app/google-services.json"}},
+    "dart":{"lib/firebase_options.dart":
+    {"projectId":"turo-31805",
+        "configurations":
+        {"android":"1:507188440079:android:1c65aa522452d0b443877a",
+            "ios":"1:507188440079:ios:ef0cb0b28ea3322143877a",
+            "macos":"1:507188440079:ios:ef0cb0b28ea3322143877a",
+            "web":"1:507188440079:web:69e7441df2a8871643877a",
+            "windows":"1:507188440079:web:5f4e5e2fca43e9cd43877a"
+        }
+    }
+            }
+}
+}
+}

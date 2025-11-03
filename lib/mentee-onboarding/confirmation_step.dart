@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turo_app/mentee-onboarding/provider_storage/storage.dart';
+import 'package:turo_app/services/database_service.dart';
+import 'package:turo_app/models/user_profile_model.dart';
+import 'package:turo_app/models/mentee_profile_model.dart';
 
 /// Final step that summarizes all captured onboarding data and asks the
 /// mentee to confirm. Values are read from [MenteeOnboardingProvider].
 ///
 /// Contract:
 /// - This screen is read-only. Editing is done by navigating back.
-/// - The primary action "Confirm & Finish" should trigger the final submit
-///   flow (e.g., remote save + navigation). Placeholders are left as TODOs.
+/// - The primary action "Confirm & Finish" triggers saving to Firestore.
 
-class ConfirmationStep extends StatelessWidget {
+class ConfirmationStep extends StatefulWidget {
   const ConfirmationStep({super.key});
+
+  @override
+  State<ConfirmationStep> createState() => _ConfirmationStepState();
+}
+
+class _ConfirmationStepState extends State<ConfirmationStep> {
+  bool _isSaving = false;
 
   /// Renders a label/value pair with consistent spacing and typography.
   Widget _buildSummaryRow(String label, String value) {
@@ -153,20 +162,144 @@ class ConfirmationStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    debugPrint('User confirmed onboarding details.');
-                    // TODO: Persist to backend (e.g., Firebase) and navigate to home.
-                    // Keep this synchronous and snappy; if doing async work,
-                    // show progress and handle errors gracefully.
-                  },
-                  child: const Text(
-                    'Confirm & Finish',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFFEFEFE),
-                    ),
-                  ),
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isSaving = true;
+                          });
+
+                          try {
+                            // Get authenticated user ID
+                            final currentUser =
+                                FirebaseAuth.instance.currentUser;
+                            if (currentUser == null) {
+                              throw Exception(
+                                'No authenticated user. Please enable Anonymous '
+                                'Authentication in Firebase Console.',
+                              );
+                            }
+                            final userId = currentUser.uid;
+
+                            // Get data from provider
+                            final provider = context
+                                .read<MenteeOnboardingProvider>();
+
+                            // Parse birthdate from provider fields
+                            final birthMonth =
+                                int.tryParse(provider.birthMonth ?? '1') ?? 1;
+                            final birthDay =
+                                int.tryParse(provider.birthDay ?? '1') ?? 1;
+                            final birthYear =
+                                int.tryParse(provider.birthYear ?? '2000') ??
+                                2000;
+                            final birthdate = DateTime(
+                              birthYear,
+                              birthMonth,
+                              birthDay,
+                            );
+
+                            // Create UserProfileModel instance
+                            final userProfile = UserProfileModel(
+                              fullName: provider.fullName ?? '',
+                              birthdate: birthdate,
+                              bio: provider.bio ?? '',
+                              addressUnitBldg:
+                                  provider.addressDetails['unitBldg'] ?? '',
+                              addressStreet:
+                                  provider.addressDetails['street'] ?? '',
+                              addressBarangay:
+                                  provider.addressDetails['barangay'] ?? '',
+                              addressCity:
+                                  provider.addressDetails['cityMunicipality'] ??
+                                  '',
+                              addressProvince:
+                                  provider.addressDetails['province'] ?? '',
+                              addressZipCode:
+                                  provider.addressDetails['zip'] ?? '',
+                            );
+
+                            // Parse budget values
+                            final minBudget =
+                                double.tryParse(provider.minBudget ?? '0') ??
+                                0.0;
+                            final maxBudget =
+                                double.tryParse(provider.maxBudget ?? '0') ??
+                                0.0;
+
+                            // Create MenteeProfileModel instance
+                            final menteeProfile = MenteeProfileModel(
+                              userId: userId,
+                              interests: provider.selectedInterests.toList(),
+                              goals: provider.selectedGoals.toList(),
+                              selectedDuration: provider.selectedDuration ?? '',
+                              minBudget: minBudget,
+                              maxBudget: maxBudget,
+                            );
+
+                            // Instantiate DatabaseService
+                            final databaseService = DatabaseService();
+
+                            // Save to Firestore using batched write
+                            await databaseService.createMenteeOnboardingData(
+                              userId: userId,
+                              profile: userProfile,
+                              menteeProfile: menteeProfile,
+                            );
+
+                            if (!mounted) return;
+
+                            // Show success feedback
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Onboarding saved successfully!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+
+                            debugPrint('Onboarding saved for user: $userId');
+
+                            // TODO: Navigate to home screen when route is created
+                            // Navigator.of(context).pushReplacementNamed('/home');
+                          } catch (e) {
+                            if (!mounted) return;
+
+                            // Show error feedback
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to save: $e'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+
+                            debugPrint('Error saving onboarding: $e');
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isSaving = false;
+                              });
+                            }
+                          }
+                        },
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Confirm & Finish',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFFEFEFE),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 12),
