@@ -201,6 +201,7 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
 
                             // Create UserProfileModel instance
                             final userProfile = UserProfileModel(
+                              userId: userId,
                               fullName: provider.fullName ?? '',
                               birthdate: birthdate,
                               bio: provider.bio ?? '',

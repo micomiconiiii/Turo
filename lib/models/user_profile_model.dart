@@ -3,6 +3,7 @@
 /// This model encapsulates personal details and address information.
 /// Use [toFirestore] to convert the model to a map suitable for Firestore storage.
 class UserProfileModel {
+  final String userId;
   final String fullName;
   final DateTime birthdate;
   final String bio;
@@ -15,6 +16,7 @@ class UserProfileModel {
 
   /// Creates a [UserProfileModel] with all required fields.
   UserProfileModel({
+    required this.userId,
     required this.fullName,
     required this.birthdate,
     required this.bio,
@@ -31,6 +33,7 @@ class UserProfileModel {
   /// The [birthdate] is stored as a Timestamp for proper querying in Firestore.
   Map<String, dynamic> toFirestore() {
     return {
+      'user_id': userId,
       'full_name': fullName,
       'birthdate': birthdate,
       'bio': bio,
@@ -48,6 +51,7 @@ class UserProfileModel {
   /// Throws [TypeError] if required fields are missing or have incorrect types.
   factory UserProfileModel.fromFirestore(Map<String, dynamic> data) {
     return UserProfileModel(
+      userId: data['user_id'] as String,
       fullName: data['full_name'] as String,
       birthdate: (data['birthdate'] as DateTime),
       bio: data['bio'] as String,
