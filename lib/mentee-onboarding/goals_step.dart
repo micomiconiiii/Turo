@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'provider_storage/storage.dart';
 
 /// GoalsStep collects one or more mentorship goals.
 ///
@@ -28,6 +30,36 @@ class GoalsStepState extends State<GoalsStep> {
 
   final Set<String> _selectedGoals = {};
   final List<String> _customGoals = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore state from provider after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Get all selected goals from provider
+      final providerGoals = provider.selectedGoals;
+
+      if (providerGoals.isNotEmpty) {
+        setState(() {
+          // Separate predefined goals from custom goals
+          for (final goal in providerGoals) {
+            if (_allGoals.contains(goal)) {
+              // This is a predefined goal
+              _selectedGoals.add(goal);
+            } else {
+              // This is a custom goal
+              _customGoals.add(goal);
+            }
+          }
+        });
+      }
+    });
+  }
 
   /// Returns an immutable union of predefined selections and custom entries.
   Set<String> get selectedGoals {

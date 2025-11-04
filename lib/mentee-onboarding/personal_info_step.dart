@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:turo_app/mentee-onboarding/provider_storage/storage.dart';
 
 /// PersonalInfoStep captures name, birth date, bio, and a structured address
 /// using cascading Province -> City/Municipality -> Barangay dropdowns.
@@ -57,7 +59,112 @@ class PersonalInfoStepState extends State<PersonalInfoStep> {
   @override
   void initState() {
     super.initState();
-    _loadLocationData();
+    _loadLocationDataAndRestore();
+  }
+
+  /// Load location data from JSON files and then restore state from provider
+  Future<void> _loadLocationDataAndRestore() async {
+    // First, load location data
+    await _loadLocationData();
+
+    // Then restore data from provider after location data is loaded
+    if (!mounted) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Restore text controllers
+      _nameController.text = provider.fullName ?? '';
+      _bioController.text = provider.bio ?? '';
+
+      // Restore address fields
+      final addressDetails = provider.addressDetails;
+      _unitBldgController.text = addressDetails['unitBldg'] ?? '';
+      _streetController.text = addressDetails['street'] ?? '';
+      _zipCodeController.text = addressDetails['zip'] ?? '';
+
+      // Restore selected location values
+      setState(() {
+        _selectedProvince = addressDetails['province'];
+        _selectedCityMunicipality = addressDetails['cityMunicipality'];
+        _selectedBarangay = addressDetails['barangay'];
+
+        // Rebuild dependent dropdowns based on restored selections
+        if (_selectedProvince != null && _provincesData.isNotEmpty) {
+          final selectedProvinceData = _provincesData.firstWhere(
+            (province) => province['province_name'] == _selectedProvince,
+            orElse: () => <String, dynamic>{},
+          );
+
+          if (selectedProvinceData.isNotEmpty) {
+            _selectedProvinceId = selectedProvinceData['province_id'] as int;
+
+            // Rebuild cities/municipalities list for the selected province
+            final municipalitiesForProvince = _municipalitiesData
+                .where(
+                  (municipality) =>
+                      municipality['province_id'] == _selectedProvinceId,
+                )
+                .toList();
+
+            _citiesMunicipalities = municipalitiesForProvince
+                .map(
+                  (municipality) => municipality['municipality_name'] as String,
+                )
+                .toList();
+
+            // Now rebuild barangays if city/municipality is also selected
+            if (_selectedCityMunicipality != null) {
+              final selectedMunicipalityData = municipalitiesForProvince
+                  .firstWhere(
+                    (municipality) =>
+                        municipality['municipality_name'] ==
+                        _selectedCityMunicipality,
+                    orElse: () => <String, dynamic>{},
+                  );
+
+              if (selectedMunicipalityData.isNotEmpty) {
+                _selectedMunicipalityId =
+                    selectedMunicipalityData['municipality_id'] as int;
+
+                // Rebuild barangays list for the selected municipality
+                final barangaysForMunicipality = _barangaysData
+                    .where(
+                      (barangay) =>
+                          barangay['municipality_id'] ==
+                          _selectedMunicipalityId,
+                    )
+                    .toList();
+
+                _barangays = barangaysForMunicipality
+                    .map((barangay) => barangay['barangay_name'] as String)
+                    .toList();
+              }
+            }
+          }
+        }
+      });
+
+      // Restore birthdate
+      if (provider.birthYear != null &&
+          provider.birthMonth != null &&
+          provider.birthDay != null) {
+        final year = int.tryParse(provider.birthYear!);
+        final month = int.tryParse(provider.birthMonth!);
+        final day = int.tryParse(provider.birthDay!);
+
+        if (year != null && month != null && day != null) {
+          setState(() {
+            _selectedBirthDate = DateTime(year, month, day);
+          });
+        }
+      }
+    });
   }
 
   /// Load location data from JSON files

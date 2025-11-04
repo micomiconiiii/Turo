@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'provider_storage/storage.dart';
 
 /// DurationStep lets the mentee choose a single mentorship duration.
 ///
@@ -22,6 +24,25 @@ class DurationStepState extends State<DurationStep> {
     'Milestone-based Mentorship',
   ];
   String? _selectedDuration;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore state from provider after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Restore selected duration from provider
+      if (provider.selectedDuration != null) {
+        setState(() {
+          _selectedDuration = provider.selectedDuration;
+        });
+      }
+    });
+  }
 
   /// Exposes the currently selected duration (or null if none).
   String? get selectedDuration => _selectedDuration;
@@ -64,28 +85,25 @@ class DurationStepState extends State<DurationStep> {
             ),
           ),
           const SizedBox(height: 16),
-          // Use RadioTheme to set fillColor instead of the (sometimes)
-          // deprecated activeColor on RadioListTile for Material 3.
-          RadioTheme(
-            data: RadioThemeData(
-              fillColor: MaterialStateProperty.all(darkGreen),
-            ),
-            child: Column(
-              children: [
-                ..._durations.map(
-                  (duration) => RadioListTile<String>(
-                    title: Text(duration),
-                    value: duration,
-                    groupValue: _selectedDuration,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDuration = value;
-                      });
-                    },
-                  ), // return RadioListTile for each option
+          // Use ListTile with manual radio icon to avoid deprecation warnings
+          Column(
+            children: _durations.map((duration) {
+              final isSelected = _selectedDuration == duration;
+              return ListTile(
+                leading: Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: isSelected ? darkGreen : Colors.grey,
                 ),
-              ],
-            ),
+                title: Text(duration),
+                onTap: () {
+                  setState(() {
+                    _selectedDuration = duration;
+                  });
+                },
+              );
+            }).toList(),
           ),
           const SizedBox(height: 8),
         ], // end column children

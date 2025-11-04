@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'provider_storage/storage.dart';
 
 /// BudgetStep collects the mentee's preferred budget range.
 ///
@@ -22,6 +24,22 @@ class BudgetStepState extends State<BudgetStep> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _minBudgetController = TextEditingController();
   final TextEditingController _maxBudgetController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore state from provider after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Restore budget values from provider
+      _minBudgetController.text = provider.minBudget ?? '';
+      _maxBudgetController.text = provider.maxBudget ?? '';
+    });
+  }
 
   /// Validates the form and triggers onSaved for fields if valid.
   /// Returns true when all validators pass.

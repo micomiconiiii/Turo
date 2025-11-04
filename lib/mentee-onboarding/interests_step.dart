@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'provider_storage/storage.dart';
 
 /// InterestsStep collects one or more areas of interest.
 ///
@@ -34,6 +36,36 @@ class InterestsStepState extends State<InterestsStep> {
   ];
   final Set<String> _selectedInterests = {};
   final List<String> _customInterests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore state from provider after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Get all selected interests from provider
+      final providerInterests = provider.selectedInterests;
+
+      if (providerInterests.isNotEmpty) {
+        setState(() {
+          // Separate predefined interests from custom interests
+          for (final interest in providerInterests) {
+            if (_allInterests.contains(interest)) {
+              // This is a predefined interest
+              _selectedInterests.add(interest);
+            } else {
+              // This is a custom interest
+              _customInterests.add(interest);
+            }
+          }
+        });
+      }
+    });
+  }
 
   /// Returns an immutable union of predefined selections and custom entries.
   Set<String> get selectedInterests {

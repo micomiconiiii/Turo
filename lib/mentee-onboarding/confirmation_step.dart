@@ -240,6 +240,11 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                             // Instantiate DatabaseService
                             final databaseService = DatabaseService();
 
+                            // Capture context-dependent values BEFORE async operation
+                            final scaffoldMessenger = ScaffoldMessenger.of(
+                              context,
+                            );
+
                             // Save to Firestore using batched write
                             await databaseService.createMenteeOnboardingData(
                               userId: userId,
@@ -247,10 +252,11 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                               menteeProfile: menteeProfile,
                             );
 
+                            // Check mounted state after async gap
                             if (!mounted) return;
 
                             // Show success feedback
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            scaffoldMessenger.showSnackBar(
                               const SnackBar(
                                 content: Text('Onboarding saved successfully!'),
                                 backgroundColor: Colors.green,
@@ -261,11 +267,15 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                             debugPrint('Onboarding saved for user: $userId');
 
                             // TODO: Navigate to home screen when route is created
-                            // Navigator.of(context).pushReplacementNamed('/home');
+                            // if (mounted) {
+                            //   Navigator.of(context).pushReplacementNamed('/home');
+                            // }
                           } catch (e) {
+                            // Check mounted state after async gap
                             if (!mounted) return;
 
                             // Show error feedback
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Failed to save: $e'),
