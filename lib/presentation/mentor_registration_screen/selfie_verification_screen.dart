@@ -79,7 +79,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
       );
 
       // Navigate to the next screen
-      Navigator.pushNamed(context, AppRoutes.credentials_achievements_screen);
+      Navigator.pushNamed(context, AppRoutes.credentialsAchievementsScreen);
 
       setState(() {
         _uploadTask = null;

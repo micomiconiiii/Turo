@@ -27,7 +27,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
 
   void _onSendOTPPressed() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final otpService = CustomFirebaseOtpService();
       final emailAddress = _emailController.text;
       
       showDialog(
@@ -75,9 +74,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
 
   void _onSkipPressed() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => IdUploadScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => IdUploadScreen()),
     );
   }
 
@@ -97,7 +94,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -118,25 +114,26 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                   ),
                 ],
               ),
-
               SizedBox(height: 8.h),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildProgressSegment(filled: true),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: true),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: false),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: false),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: false),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: false),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildProgressSegment(filled: true),
+                    SizedBox(width: 2.h),
+                    _buildProgressSegment(filled: true),
+                    SizedBox(width: 2.h),
+                    _buildProgressSegment(filled: false),
+                    SizedBox(width: 2.h),
+                    _buildProgressSegment(filled: false),
+                    SizedBox(width: 2.h),
+                    _buildProgressSegment(filled: false),
+                    SizedBox(width: 2.h),
+                    _buildProgressSegment(filled: false),
+                  ],
+                ),
               ),
-
               SizedBox(height: 24.h),
               Center(
                 child: Container(
@@ -155,7 +152,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                   ),
                 ),
               ),
-
               SizedBox(height: 12.h),
               Center(
                 child: Text(
@@ -169,12 +165,10 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                   style: TextStyleHelper.instance.body12RegularFustat.copyWith(color: appTheme.gray_800, height: 1.5),
                 ),
               ),
-
               SizedBox(height: 32.h),
               Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     CustomEditText(
                       controller: _institutionController,
@@ -223,14 +217,12 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                   ],
                 ),
               ),
-
               SizedBox(height: 32.h),
               CustomButton(
                 text: 'Send OTP',
                 onPressed: _onSendOTPPressed,
                 backgroundColor: appTheme.blue_gray_700,
                 textColor: Colors.white,
-                margin: EdgeInsets.zero,
               ),
               SizedBox(height: 16.h),
               CustomButton(
@@ -238,7 +230,6 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 onPressed: _onSkipPressed,
                 backgroundColor: Colors.transparent,
                 textColor: appTheme.blue_gray_700,
-                margin: EdgeInsets.zero,
               ),
             ],
           ),

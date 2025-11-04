@@ -7,7 +7,7 @@ class CustomFirebaseOtpService {
 
   static Future<bool> requestEmailOTP(String email) async {
     try {
-      final callable = _functions.httpsCallable('sendOTP');
+      final callable = _functions.httpsCallable('requestEmailOTP');
       final response = await callable.call<Map<String, dynamic>>({'email': email});
       print(response.data['message']);
       return response.data['success'] == true;
@@ -19,23 +19,26 @@ class CustomFirebaseOtpService {
 
   static Future<bool> verifyEmailOTP(String email, String otp) async {
     try {
-      final callable = _functions.httpsCallable('verifyOTP');
+      final callable = _functions.httpsCallable('verifyEmailOTP');
+      email = email.toLowerCase().trim();
+      otp = otp.trim();
       final response = await callable.call<Map<String, dynamic>>({
         'email': email,
         'otp': otp,
       });
-
-      print(response.data['message']);
-      return response.data['success'] == true;
+      if (response.data['success'] == true && response.data['token'] != null) {
+        await _auth.signInWithCustomToken(response.data['token']);
+        return true;
+      }
+      return false;
     } on FirebaseFunctionsException catch (e) {
       print('Error verifying email OTP: ${e.code} - ${e.message}');
       return false;
     }
   }
-
   static Future<bool> resendEmailOTP(String email) async {
     try {
-      final callable = _functions.httpsCallable('resendOTP');
+      final callable = _functions.httpsCallable('requestEmailOTP');
       final response = await callable.call<Map<String, dynamic>>({'email': email});
       print(response.data['message']);
       return response.data['success'] == true;
