@@ -6,10 +6,9 @@ import 'dart:io';
 // Import the next screen in the setup flow
 import 'expertise_setup_screen.dart';
 
-// Import the reusable widgets. This import path ('../') goes up one directory.
+// Import the reusable widgets
 import '../widgets/common_widgets.dart';
 
-// This is a StatefulWidget because its state needs to change (to store the selected image)
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -20,7 +19,7 @@ class ProfileSetupScreen extends StatefulWidget {
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   // A nullable 'File' variable to store the path of the image the user picks.
   File? _image;
-  
+
   // An instance of ImagePicker to handle opening the gallery
   final picker = ImagePicker();
 
@@ -39,7 +38,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ExpertiseSetupScreen(),
+        // --- PASS DATA FORWARD ---
+        // Pass the selected image file to the next screen
+        builder: (context) => ExpertiseSetupScreen(
+          profileImage: _image,
+        ),
       ),
     );
   }
@@ -54,7 +57,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
               // --- 1. Reusable Header ---
               const TuroLogoHeader(),
               const SizedBox(height: 20),
@@ -86,10 +88,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              
-              // --- THIS IS THE FIX ---
-              // Removed 'const' from 'Center' because its child
-              // 'Text' widget uses 'Colors.grey[600]', which is not constant.
               Center(
                 child: Column(
                   children: [
@@ -101,7 +99,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text( // This widget is not constant
+                    Text(
                       "Make sure that it looks professional!",
                       style: TextStyle(
                         color: Colors.grey[600],
@@ -112,8 +110,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              
-              // This 'Text' also uses a non-constant color
               Text(
                 "Choose your profile picture",
                 style: TextStyle(
@@ -132,14 +128,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.shade400),
                   ),
-                  // This 'Text' is also not constant because it depends on a variable
                   child: Text(
                     _image == null ? "Upload your picture" : "Picture selected",
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
-              
               const Spacer(),
 
               // --- 3. Reusable Footer ---

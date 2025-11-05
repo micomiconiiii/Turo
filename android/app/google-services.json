@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "507188440079",
+    "project_id": "turo-31805",
+    "storage_bucket": "turo-31805.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507188440079:android:8160d7ace74d945143877a",
+        "android_client_info": {
+          "package_name": "com.example.turo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASEcR_OvwA9JP2hwY8PqD5Jxa3FTTm8pA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507188440079:android:1c65aa522452d0b443877a",
+        "android_client_info": {
+          "package_name": "com.example.turo_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASEcR_OvwA9JP2hwY8PqD5Jxa3FTTm8pA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507188440079:android:337b3e18c2ea4e5343877a",
+        "android_client_info": {
+          "package_name": "com.example.turo_profile_setup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASEcR_OvwA9JP2hwY8PqD5Jxa3FTTm8pA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

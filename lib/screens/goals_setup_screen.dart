@@ -1,5 +1,6 @@
 // Import Flutter's material library
 import 'package:flutter/material.dart';
+import 'dart:io'; // <-- ADDED for File
 
 // Import the next screen in the flow
 import 'duration_setup_screen.dart';
@@ -8,17 +9,23 @@ import 'duration_setup_screen.dart';
 import '../widgets/common_widgets.dart';
 
 /// Step 3 of the profile setup: "What are your goals?"
-/// This is a StatefulWidget because it needs to store the state
-/// of the checkboxes.
 class GoalsSetupScreen extends StatefulWidget {
-  const GoalsSetupScreen({super.key});
+  // --- ADDED THIS ---
+  final File? profileImage;
+  final List<String>? expertise;
+
+  const GoalsSetupScreen({
+    super.key,
+    this.profileImage, // Added to constructor
+    this.expertise,    // Added to constructor
+  });
 
   @override
   State<GoalsSetupScreen> createState() => _GoalsSetupScreenState();
 }
 
 class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
-  // 1. List of all available goal options
+  // List of all available goal options
   final List<String> _goalOptions = [
     'Career Development',
     'Business Consultation',
@@ -26,42 +33,41 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
     'Personal Growth',
   ];
 
-  // 2. Map to store the checked state (true/false) of each option
+  // Map to store the checked state
   Map<String, bool> _selectedGoals = {};
 
-  /// This function runs once when the widget is first created.
   @override
   void initState() {
     super.initState();
-    // 3. Initialize the map, setting all options to 'false' (unchecked)
     _selectedGoals = {for (var option in _goalOptions) option: false};
   }
 
-  // 4. We no longer need the _buildGoalTile method, 
-  //    as this logic is now inside `SetupCheckboxTile`.
-
-  /// Navigates the user to the next step (DurationSetupScreen)
+  /// Navigates the user to the next step
   void _goToNextStep() {
-    // First, find all the items that the user checked
+    // Get this screen's data
     final selected = _selectedGoals.entries
-        .where((entry) => entry.value) // Filter for true values
-        .map((entry) => entry.key) // Get the name (key)
-        .toList(); // Convert to a list
-    
-    // Print the list to the debug console
+        .where((entry) => entry.value)
+        .map((entry) => entry.key)
+        .toList();
     print("Selected goals: $selected");
 
     // Navigate to the next screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const DurationSetupScreen(),
+        // --- PASS DATA FORWARD ---
+        builder: (context) => DurationSetupScreen(
+          profileImage: widget.profileImage, // from Step 1
+          expertise: widget.expertise,    // from Step 2
+          goals: selected,                // from Step 3
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // (The build method remains exactly the same, using the common widgets)
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -71,14 +77,11 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- 1. HEADER ---
-              // Replaced the "TURO" Text widget
               const TuroLogoHeader(),
               const SizedBox(height: 20),
-
-              // Replaced the progress Row widgets
               const SetupProgressHeader(
-                title: "What are your goals?", // <-- Updated title
-                currentStep: 3, // <-- Updated step
+                title: "What are your goals?",
+                currentStep: 3,
               ),
               const SizedBox(height: 40),
 
@@ -87,11 +90,8 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Replaced the Center(CircleAvatar(...))
-                      const SetupScreenIcon(icon: Icons.assignment_ind_outlined), // <-- Updated icon
+                      const SetupScreenIcon(icon: Icons.assignment_ind_outlined),
                       const SizedBox(height: 30),
-
-                      // This part is specific to this screen (title/subtitle)
                       Center(
                         child: Column(
                           children: [
@@ -103,7 +103,6 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            // Removed 'const' because TextStyle uses non-constant Colors.grey[600]
                             Text(
                               "Select the goals you want to focus on.",
                               style: TextStyle(
@@ -117,41 +116,32 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                       const SizedBox(height: 30),
 
                       // --- Checkbox List ---
-                      // Map over the options list and create a reusable SetupCheckboxTile for each one
                       Column(
                         children: _goalOptions.map((goal) {
                           return SetupCheckboxTile(
                             label: goal,
-                            value: _selectedGoals[goal]!, // The current checked state
-                            
-                            // Runs when the checkbox is tapped
+                            value: _selectedGoals[goal]!,
                             onChanged: (bool? newValue) {
                               setState(() {
                                 _selectedGoals[goal] = newValue!;
                               });
                             },
-                            
-                            // Runs when the whole row is tapped
                             onTap: () {
                               setState(() {
-                                // Toggle the value
                                 _selectedGoals[goal] =
                                     !_selectedGoals[goal]!;
                               });
                             },
                           );
-                        }).toList(), // Convert the map to a list
+                        }).toList(),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // Add a little space before the buttons
               const SizedBox(height: 20),
 
               // --- 3. FOOTER ---
-              // Replaced the button Column
               SetupButtonFooter(
                 onNext: _goToNextStep,
                 onSkip: _goToNextStep,
