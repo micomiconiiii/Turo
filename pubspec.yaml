@@ -1,0 +1,56 @@
+name: user_home_page
+description: "A new Flutter project."
+publish_to: "none"
+version: 1.0.0+1
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # UI/Assets
+  flutter_svg: ^2.0.12
+  cached_network_image: ^3.4.1 # For remote images
+  font_awesome_flutter: ^10.7.0 # For icons (Bell, User, Heart, X, etc.)
+  flutter_swipable: ^1.2.0 # The core swipe library
+  gradient_borders: ^1.0.2
+
+  # State Management & Utility
+  provider: ^6.1.2
+  connectivity_plus: ^6.1.0
+  shared_preferences: ^2.3.3
+  web: any # For Flutter Web compatibility
+
+  # Backend (Firebase Core)
+  firebase_core: ^3.2.0
+  cloud_firestore: ^5.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/ # Ensure mico_abas.png is here!
+
+  fonts:
+    - family: Fustat
+      fonts:
+        - asset: assets/fonts/FustatExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/FustatRegular.ttf
+          weight: 400
+        - asset: assets/fonts/FustatSemiBold.ttf
+          weight: 600
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/MontserratSemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/MontserratRegular.ttf
+          weight: 400
