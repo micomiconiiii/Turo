@@ -1,40 +1,55 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../widgets/city_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'institutional_verification_screen.dart';
 
-class MentorRegistrationScreen extends StatelessWidget {
+class MentorRegistrationScreen extends StatefulWidget {
+  const MentorRegistrationScreen({super.key});
+
+  @override
+  State<MentorRegistrationScreen> createState() =>
+      _MentorRegistrationScreenState();
+}
+
+class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _monthController = TextEditingController();
   final TextEditingController _dayController = TextEditingController();
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _addressUnitBldgController =
+      TextEditingController();
+  final TextEditingController _addressStreetController = TextEditingController();
+  final TextEditingController _addressBarangayController =
+      TextEditingController();
   final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _provinceController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
-
-  MentorRegistrationScreen({super.key});
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appTheme.white_A700,
       resizeToAvoidBottomInset: true,
-
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(bottom: 16.h, left: 20.h, right: 20.h),
-          child: CustomButton(
-            text: 'Next',
-            onPressed: () => _onNextPressed(context),
-          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : CustomButton(
+                  text: 'Next',
+                  onPressed: () => _onNextPressed(context),
+                ),
         ),
       ),
-
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -145,9 +160,23 @@ class MentorRegistrationScreen extends StatelessWidget {
                   keyboardType: TextInputType.multiline,
                 ),
                 _buildLabeledField(
-                  label: 'Address (Street Address)',
-                  placeholder: 'Street Address',
-                  controller: _addressController,
+                  label: 'Unit, Building, etc.',
+                  placeholder: 'Unit, Building, etc.',
+                  controller: _addressUnitBldgController,
+                  validator: _validateAddress,
+                  keyboardType: TextInputType.streetAddress,
+                ),
+                _buildLabeledField(
+                  label: 'Street',
+                  placeholder: 'Street',
+                  controller: _addressStreetController,
+                  validator: _validateAddress,
+                  keyboardType: TextInputType.streetAddress,
+                ),
+                _buildLabeledField(
+                  label: 'Barangay',
+                  placeholder: 'Barangay',
+                  controller: _addressBarangayController,
                   validator: _validateAddress,
                   keyboardType: TextInputType.streetAddress,
                 ),
@@ -163,6 +192,13 @@ class MentorRegistrationScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                _buildLabeledField(
+                  label: 'Province',
+                  placeholder: 'Province',
+                  controller: _provinceController,
+                  validator: _validateAddress,
+                  keyboardType: TextInputType.streetAddress,
                 ),
                 _buildLabeledField(
                   label: 'Zip Code',
@@ -253,7 +289,9 @@ class MentorRegistrationScreen extends StatelessWidget {
   String? _validateMonth(String? value) {
     if (value?.isEmpty == true) return 'Month is required';
     final month = int.tryParse(value!);
-    if (month == null || month < 1 || month > 12) return 'Enter valid month (1-12)';
+    if (month == null || month < 1 || month > 12) {
+      return 'Enter valid month (1-12)';
+    }
     return null;
   }
 
@@ -268,7 +306,9 @@ class MentorRegistrationScreen extends StatelessWidget {
     if (value?.isEmpty == true) return 'Year is required';
     final year = int.tryParse(value!);
     final currentYear = DateTime.now().year;
-    if (year == null || year < 1900 || year > currentYear) return 'Enter valid year';
+    if (year == null || year < 1900 || year > currentYear) {
+      return 'Enter valid year';
+    }
     return null;
   }
 
@@ -292,37 +332,81 @@ class MentorRegistrationScreen extends StatelessWidget {
   }
 
   String? _validateAddress(String? value) {
-    if (value?.isEmpty == true) return 'Address is required';
+    if (value?.isEmpty == true) return 'This field is required';
     return null;
   }
 
   void _onNextPressed(BuildContext context) {
     if (_formKey.currentState?.validate() == true) {
-      _clearForm();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Registration step 1 completed successfully!'),
-          backgroundColor: appTheme.blue_gray_700,
-        ),
-      );
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => InstitutionalVerificationScreen(),
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      _saveProfileData(context);
     }
   }
 
-  void _clearForm() {
-    _fullNameController.clear();
-    _monthController.clear();
-    _dayController.clear();
-    _yearController.clear();
-    _bioController.clear();
-    _addressController.clear();
-    _cityController.clear();
-    _zipCodeController.clear();
+  Future<void> _saveProfileData(BuildContext context) async {
+    try {
+      // The user must be logged in to get a UID and call the function.
+      if (FirebaseAuth.instance.currentUser == null) {
+        throw Exception("You must be logged in to register.");
+      }
+
+      final int month = int.parse(_monthController.text);
+      final int day = int.parse(_dayController.text);
+      final int year = int.parse(_yearController.text);
+      final DateTime birthdate = DateTime(year, month, day);
+
+      // This is the data payload we will send to our Cloud Function.
+      final Map<String, dynamic> userProfileData = {
+        'fullName': _fullNameController.text,
+        'birthdate': birthdate.toIso8601String(), // Send as a string
+        'bio': _bioController.text,
+        'address': {
+          'unitBldg': _addressUnitBldgController.text,
+          'street': _addressStreetController.text,
+          'barangay': _addressBarangayController.text,
+          'city': _cityController.text,
+          'province': _provinceController.text,
+          'zipCode': _zipCodeController.text,
+        },
+        'roles': ['mentee'], // Set a default role
+      };
+
+      // Get a reference to the callable Cloud Function.
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('saveUserProfile');
+      
+      // Call the function and pass the data payload.
+      await callable.call(userProfileData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile information saved successfully!'),
+            backgroundColor: appTheme.blue_gray_700,
+          ),
+        );
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => InstitutionalVerificationScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save profile: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

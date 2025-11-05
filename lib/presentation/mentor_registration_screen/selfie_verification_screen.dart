@@ -127,7 +127,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                         .copyWith(color: appTheme.gray_800, height: 1.45),
                   ),
                   Text(
-                    'Step 3 out of 6',
+                    'Step 4 out of 6',
                     style: TextStyleHelper.instance.body12RegularFustat
                         .copyWith(height: 1.5),
                   ),
@@ -144,10 +144,13 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                   SizedBox(width: 2.h),
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
+                  
+                  _buildProgressSegment(filled: true),
+                  SizedBox(width: 2.h),
                   Expanded(
                     child: Row(
                       children: List.generate(
-                        3,
+                        2,
                         (i) => Expanded(
                           child: Container(
                             height: 6.h,

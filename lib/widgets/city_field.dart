@@ -86,24 +86,24 @@ class _CityFieldState extends State<CityField> {
           focusNode: focusNode,
           decoration: InputDecoration(
             labelText: widget.label ?? 'City',
-            labelStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
+            labelStyle: TextStyle(color: Colors.black.withAlpha(128)),
             hintText: widget.hintText ?? 'Start typing your city...',
-            hintStyle: TextStyle(color: Colors.black.withOpacity(0.25)),
+            hintStyle: TextStyle(color: Colors.black.withAlpha(64)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.25)),
+              borderSide: BorderSide(color: Colors.black.withAlpha(64)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.25)),
+              borderSide: BorderSide(color: Colors.black.withAlpha(64)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.25), width: 2),
+              borderSide: BorderSide(color: Colors.black.withAlpha(64), width: 2),
             ),
           ),
           validator: (value) {

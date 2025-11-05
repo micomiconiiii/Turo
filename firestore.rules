@@ -1,8 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // Users can read and update their own profile.
+    match /user_profiles/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+
+    // Mentor verification data can only be accessed by the mentor themselves.
+    match /mentor_verifications/{userId} {
+      allow read, create, update: if request.auth.uid == userId;
+    }
+
+    // Achievements can only be managed by the mentor.
+    match /mentor_verifications/{userId}/achievements/{achievementId} {
+        allow read, create, update, delete: if request.auth.uid == userId;
+    }
+
+    // Cities can be read by any authenticated user.
+    match /cities/{cityId} {
+      allow read: if request.auth.uid != null;
     }
   }
 }

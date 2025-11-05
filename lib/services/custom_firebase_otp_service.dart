@@ -22,17 +22,24 @@ class CustomFirebaseOtpService {
       final callable = _functions.httpsCallable('verifyEmailOTP');
       email = email.toLowerCase().trim();
       otp = otp.trim();
+
+      print('📝 Sending OTP verification - Email: $email, OTP: $otp');
+
+
       final response = await callable.call<Map<String, dynamic>>({
         'email': email,
         'otp': otp,
       });
+
+      print('✅ Verification response: ${response.data}');
+    
+
       if (response.data['success'] == true && response.data['token'] != null) {
         await _auth.signInWithCustomToken(response.data['token']);
         return true;
       }
       return false;
     } on FirebaseFunctionsException catch (e) {
-      print('Error verifying email OTP: ${e.code} - ${e.message}');
       return false;
     }
   }

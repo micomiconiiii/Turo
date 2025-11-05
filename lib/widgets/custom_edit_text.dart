@@ -49,7 +49,7 @@ class _CustomEditTextState extends State<CustomEditText> {
         decoration: InputDecoration(
           labelText: widget.placeholder ?? "",
           labelStyle: TextStyleHelper.instance.title16RegularFustat.copyWith(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withAlpha(128),
             height: 23.h / 16.fSize,
           ),
           floatingLabelStyle: TextStyleHelper.instance.title16RegularFustat.copyWith(
@@ -60,23 +60,23 @@ class _CustomEditTextState extends State<CustomEditText> {
           contentPadding: EdgeInsets.all(10.h),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.black.withOpacity(0.25)),
+            borderSide: BorderSide(color: Colors.black.withAlpha(64)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.black.withOpacity(0.25)),
+            borderSide: BorderSide(color: Colors.black.withAlpha(64)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.black.withOpacity(0.25), width: 2),
+            borderSide: BorderSide(color: Colors.black.withAlpha(64), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.red.withOpacity(0.8)),
+            borderSide: BorderSide(color: Colors.red.withAlpha(204)),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.red.withOpacity(0.8), width: 2),
+            borderSide: BorderSide(color: Colors.red.withAlpha(204), width: 2),
           ),
         ),
       ),
