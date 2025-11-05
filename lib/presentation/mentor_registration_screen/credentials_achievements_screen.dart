@@ -1,4 +1,4 @@
-
+// This screen is for adding credentials and achievements during mentor registration (STEP 5 out of 6).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';

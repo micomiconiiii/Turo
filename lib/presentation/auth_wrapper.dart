@@ -19,7 +19,7 @@ class AuthWrapper extends StatelessWidget {
         else {
           // You should probably have a dedicated login/signup screen here
           // For now, I'm directing to the registration screen as per the flow
-          return MentorRegistrationScreen(); 
+          return AppNavigationScreen(); 
         }
       },
     );

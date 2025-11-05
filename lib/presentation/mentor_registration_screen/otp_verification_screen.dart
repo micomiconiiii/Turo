@@ -1,3 +1,4 @@
+// This screen is for OTP verification during mentor registration.
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import '../../core/app_export.dart';
@@ -29,8 +30,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     setState(() => _isVerifying = true);
 
     final otp = _pinController.text.trim();
-    print('🔍 DEBUG - Email: "${widget.email}"');
-    print('🔍 DEBUG - OTP: "$otp" (length: ${otp.length})');
     
     final success = await CustomFirebaseOtpService.verifyEmailOTP(
       widget.email, otp);

@@ -1,3 +1,4 @@
+// This screen is for mentor registration (STEP 1 out of 6).
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +7,11 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../widgets/city_field.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'institutional_verification_screen.dart';
 
 class MentorRegistrationScreen extends StatefulWidget {
-  const MentorRegistrationScreen({super.key});
+  final String uid;
+  const MentorRegistrationScreen({super.key, required this.uid});
 
   @override
   State<MentorRegistrationScreen> createState() =>
@@ -238,6 +239,7 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
     return Container(
       margin: EdgeInsets.only(top: 10.h),
       child: CustomEditText(
+        labelText: label,
         placeholder: placeholder,
         controller: controller,
         validator: validator,
@@ -347,11 +349,6 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
 
   Future<void> _saveProfileData(BuildContext context) async {
     try {
-      // The user must be logged in to get a UID and call the function.
-      if (FirebaseAuth.instance.currentUser == null) {
-        throw Exception("You must be logged in to register.");
-      }
-
       final int month = int.parse(_monthController.text);
       final int day = int.parse(_dayController.text);
       final int year = int.parse(_yearController.text);
@@ -370,14 +367,17 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
           'province': _provinceController.text,
           'zipCode': _zipCodeController.text,
         },
-        'roles': ['mentee'], // Set a default role
+        'roles': ['mentor'], // Set role to mentor
       };
 
       // Get a reference to the callable Cloud Function.
       final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('saveUserProfile');
       
       // Call the function and pass the data payload.
-      await callable.call(userProfileData);
+      await callable.call({
+        'uid': widget.uid,
+        'data': userProfileData,
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

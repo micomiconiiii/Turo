@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
 import '../../core/app_export.dart';
 
 class AppNavigationScreen extends StatelessWidget {
-  const AppNavigationScreen({super.key});
+  const AppNavigationScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +19,52 @@ class AppNavigationScreen extends StatelessWidget {
                     children: [
                       _buildScreenTitle(
                         context,
-                        screenTitle: "Mentor Onboarding",
+                        screenTitle: "Sign Up - Mentee",
+                        onTapScreenTitle: () =>
+                            onTapScreenTitle(context, AppRoutes.splashScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Sign Up - Mentee",
+                        onTapScreenTitle: () =>
+                            onTapScreenTitle(context, AppRoutes.splashScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Sign Up - Mentee",
+                        onTapScreenTitle: () =>
+                            onTapScreenTitle(context, AppRoutes.splashScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Sign Up - Mentee",
+                        onTapScreenTitle: () =>
+                            onTapScreenTitle(context, AppRoutes.splashScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Log in",
+                        onTapScreenTitle: () =>
+                            onTapScreenTitle(context, AppRoutes.loginScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Sign Up - Mentee",
                         onTapScreenTitle: () => onTapScreenTitle(
-                            context, AppRoutes.mentorRegistrationScreen),
+                            context, AppRoutes.userRegistrationScreen),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Sign Up- Mentor",
+                        onTapScreenTitle: () => Navigator.pushNamed(
+                            context, AppRoutes.mentorRegistrationScreen,
+                            arguments: 'dummy_uid'),
+                      ),
+                      _buildScreenTitle(
+                        context,
+                        screenTitle: "Terms and Conditions",
+                        onTapScreenTitle: () => onTapScreenTitle(
+                            context, AppRoutes.termsAndConditionsScreen),
                       ),
                     ],
                   ),
@@ -87,7 +129,7 @@ class AppNavigationScreen extends StatelessWidget {
         return className;
       },
       isScrollControlled: true,
-      backgroundColor: appTheme.transparentCustom,
+      backgroundColor: Colors.transparent,
     );
   }
 
@@ -98,7 +140,7 @@ class AppNavigationScreen extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           content: className,
-          backgroundColor: appTheme.transparentCustom,
+          backgroundColor: Colors.transparent,
           insetPadding: EdgeInsets.zero,
         );
       },

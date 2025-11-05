@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
-import '../core/app_export.dart';
 
-/// CustomEditText - Reusable text input field with dynamic text color on focus/typing
+import '../core/app_export.dart';
+import './custom_image_view.dart';
+
 class CustomEditText extends StatefulWidget {
-  const CustomEditText({
-    super.key,
+  CustomEditText({
+    Key? key,
+    this.controller,
     this.placeholder,
+    this.prefixIconPath,
+    this.isPassword = false,
     this.validator,
     this.keyboardType,
+    this.onTap,
     this.width,
     this.margin,
-    this.controller,
-    this.onChanged,
-    this.enabled,
-  });
+    this.labelText,
+  }) : super(key: key);
 
+  final TextEditingController? controller;
   final String? placeholder;
+  final String? prefixIconPath;
+  final bool isPassword;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
+  final VoidCallback? onTap;
   final double? width;
-  final EdgeInsetsGeometry? margin;
-  final TextEditingController? controller;
-  final Function(String)? onChanged;
-  final bool? enabled;
+  final EdgeInsets? margin;
+  final String? labelText;
 
   @override
   State<CustomEditText> createState() => _CustomEditTextState();
 }
 
 class _CustomEditTextState extends State<CustomEditText> {
-  final FocusNode _focusNode = FocusNode();
+  bool _isObscureText = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscureText = widget.isPassword;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -37,46 +49,72 @@ class _CustomEditTextState extends State<CustomEditText> {
       margin: widget.margin,
       child: TextFormField(
         controller: widget.controller,
-        focusNode: _focusNode,
+        obscureText: widget.isPassword ? _isObscureText : false,
         validator: widget.validator,
         keyboardType: widget.keyboardType ?? TextInputType.text,
-        enabled: widget.enabled ?? true,
-        onChanged: widget.onChanged,
-        style: TextStyleHelper.instance.title16RegularFustat.copyWith(
-          color: Colors.black,
-          height: 23.h / 16.fSize,
-        ),
+        onTap: widget.onTap,
+        style: TextStyleHelper.instance.body16RegularFustat
+            .copyWith(color: Color(0xFF3D3D3D)),
         decoration: InputDecoration(
-          labelText: widget.placeholder ?? "",
-          labelStyle: TextStyleHelper.instance.title16RegularFustat.copyWith(
-            color: Colors.black.withAlpha(128),
-            height: 23.h / 16.fSize,
+          labelText: widget.labelText,
+          labelStyle: TextStyle(color: Colors.black.withAlpha(128)),
+          hintText: widget.placeholder ?? "",
+          hintStyle: TextStyle(color: Colors.black.withAlpha(64)),
+          prefixIcon: widget.prefixIconPath != null
+              ? Padding(
+                  padding: EdgeInsets.all(12.h),
+                  child: CustomImageView(
+                    imagePath: widget.prefixIconPath!,
+                    height: 18.h,
+                    width:
+                        widget.prefixIconPath!.contains('18x20') ? 20.h : 16.h,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
           ),
-          floatingLabelStyle: TextStyleHelper.instance.title16RegularFustat.copyWith(
-            color: Colors.black,
-            fontSize: 13.fSize,
-            height: 1.2,
-          ),
-          contentPadding: EdgeInsets.all(10.h),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.h),
+            borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: Colors.black.withAlpha(64)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.h),
+            borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: Colors.black.withAlpha(64)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.h),
+            borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: Colors.black.withAlpha(64), width: 2),
           ),
+          suffixIcon: widget.isPassword
+              ? IconButton(
+                  icon: Icon(
+                    _isObscureText ? Icons.visibility_off : Icons.visibility,
+                    color: Color(0xFF3D3D3D),
+                    size: 20.h,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscureText = !_isObscureText;
+                    });
+                  },
+                )
+              : null,
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.red.withAlpha(204)),
+            borderRadius: BorderRadius.circular(14.h),
+            borderSide: BorderSide(
+              color: Colors.red,
+              width: 1.h,
+            ),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.h),
-            borderSide: BorderSide(color: Colors.red.withAlpha(204), width: 2),
+            borderRadius: BorderRadius.circular(14.h),
+            borderSide: BorderSide(
+              color: Colors.red,
+              width: 1.h,
+            ),
           ),
         ),
       ),

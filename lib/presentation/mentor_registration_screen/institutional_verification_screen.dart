@@ -1,3 +1,4 @@
+// This screen is for institutional verification during mentor registration (STEP 2 out of 6).
 import 'package:flutter/material.dart';
 import 'package:turo/presentation/mentor_registration_screen/id_upload_screen.dart';
 import '../../core/app_export.dart';
@@ -8,8 +9,8 @@ import '../../services/custom_firebase_otp_service.dart';
 import './otp_verification_screen.dart';
 
 enum ButtonVariant {
-  FillPrimary,
-  OutlineBlack,
+  fillPrimary,
+  outlineBlack,
 }
 
 class InstitutionalVerificationScreen extends StatefulWidget {

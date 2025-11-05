@@ -1,4 +1,4 @@
-
+// This screen is for OTP verification during mentor registration.
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:turo/core/app_export.dart';
@@ -25,7 +25,7 @@ class _OtpScreenState extends State<OtpScreen> {
           child: CustomButton(
             text: 'Verify',
             onPressed: () {
-              // TODO: Implement OTP verification logic
+              // Implement OTP verification logic
               Navigator.pushNamed(context, AppRoutes.idUploadScreen);
             },
           ),
@@ -115,7 +115,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 controller: _pinController,
                 length: 6,
                 onCompleted: (pin) {
-                  // TODO: Implement OTP verification logic
+                  
                 },
               ),
             ],

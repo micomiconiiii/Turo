@@ -2,80 +2,81 @@ import 'package:flutter/material.dart';
 
 import '../core/app_export.dart';
 
-/// A customizable button widget that supports various styling options
-///
-/// Features:
-/// - Customizable text, colors, and dimensions
-/// - Full-width layout support
-/// - Disabled state handling
-/// - Responsive design with SizeUtils
-/// - Material Design interactions
-///
-/// Arguments:
-/// - [text]: The text to display on the button
-/// - [onPressed]: Callback function when button is tapped
-/// - [backgroundColor]: Background color of the button
-/// - [textColor]: Color of the button text
-/// - [borderRadius]: Corner radius of the button
-/// - [height]: Height of the button
-/// - [width]: Width of the button (use double.infinity for full width)
-/// - [isDisabled]: Whether the button is disabled
-/// - [margin]: External margin around the button
-/// - [padding]: Internal padding of the button
+/**
+ * CustomButton - A reusable button component with customizable styling
+ * 
+ * @param text - Button text content
+ * @param onPressed - Callback function when button is pressed
+ * @param backgroundColor - Background color of the button
+ * @param textColor - Color of the button text
+ * @param fontSize - Font size of the button text
+ * @param fontWeight - Font weight of the button text
+ * @param borderRadius - Border radius of the button
+ * @param padding - Internal padding of the button
+ * @param margin - External margin of the button
+ * @param height - Height of the button
+ * @param width - Width of the button
+ * @param isExpanded - Whether button should take full width
+ */
 class CustomButton extends StatelessWidget {
-  const CustomButton({
-    super.key,
-    this.text,
+  CustomButton({
+    Key? key,
+    required this.text,
     this.onPressed,
     this.backgroundColor,
     this.textColor,
+    this.fontSize,
+    this.fontWeight,
     this.borderRadius,
+    this.padding,
+    this.margin,
     this.height,
     this.width,
-    this.isDisabled,
-    this.margin,
-    this.padding,
-  });
+    this.isExpanded,
+  }) : super(key: key);
 
-  final String? text;
+  final String text;
   final VoidCallback? onPressed;
   final Color? backgroundColor;
   final Color? textColor;
+  final double? fontSize;
+  final FontWeight? fontWeight;
   final double? borderRadius;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
   final double? height;
   final double? width;
-  final bool? isDisabled;
-  final EdgeInsetsGeometry? margin;
-  final EdgeInsetsGeometry? padding;
+  final bool? isExpanded;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? EdgeInsets.symmetric(horizontal: 14.h, vertical: 14.h),
-      child: SizedBox(
-        height: height ?? 48.h,
-        width: width ?? double.infinity,
-        child: ElevatedButton(
-          onPressed: (isDisabled ?? false) ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor ?? Color(0xFF10403B),
-            disabledBackgroundColor:
-                (backgroundColor ?? Color(0xFF10403B)).withAlpha(128),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius ?? 14.h),
-            ),
-            padding: padding ??
-                EdgeInsets.symmetric(vertical: 8.h, horizontal: 30.h),
-            elevation: 0,
+      margin: margin ?? EdgeInsets.zero,
+      height: height ?? 48.h,
+      width: isExpanded == true ? double.infinity : width,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor ?? Color(0xFF10403B),
+          padding: padding ??
+              EdgeInsets.symmetric(
+                vertical: 8.h,
+                horizontal: 30.h,
+              ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius ?? 14.h),
           ),
-          child: Text(
-            text ?? "Next",
-            style: TextStyleHelper.instance.title20SemiBoldFustat
-                .copyWith(color: textColor ?? Color(0xFFFEFEFE), height: 1.45),
-          ),
+          elevation: 0,
+        ),
+        child: Text(
+          text,
+          style: TextStyleHelper.instance.title20SemiBoldFustat.copyWith(
+              fontSize: fontSize ?? 20.fSize,
+              fontWeight: fontWeight ?? FontWeight.w600,
+              color: textColor ?? Color(0xFFFEFEFE),
+              height: 1.45),
         ),
       ),
     );
   }
 }
-  

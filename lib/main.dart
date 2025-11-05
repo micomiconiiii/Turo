@@ -12,7 +12,6 @@ var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  print('🔵 Starting Supabase initialization...');  
   await Supabase.initialize(
     url: 'https://nyneapamoopinciztmgd.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bmVhcGFtb29waW5jaXp0bWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDY1ODMsImV4cCI6MjA3NjIyMjU4M30.UY8hmGf9BJPw10t75vP2B2_3UMZmzvf_NlO5Rylu6-E',
@@ -40,7 +39,6 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'turo_mentor',
           debugShowCheckedModeBanner: false,
-          useInheritedMediaQuery: true,
           locale: DevicePreview.locale(context),
           builder: DevicePreview.appBuilder,
           initialRoute: AppRoutes.initialRoute,

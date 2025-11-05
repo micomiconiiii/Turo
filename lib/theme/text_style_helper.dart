@@ -53,4 +53,43 @@ class TextStyleHelper {
         fontFamily: 'Fustat',
         color: appTheme.color7F0000,
       );
+  TextStyle get body16RegularFustat => TextStyle(
+        fontSize: 16.fSize,
+        fontWeight: FontWeight.w400,
+        fontFamily: 'Fustat',
+      );
+
+  TextStyle get body16SemiBoldFustat => TextStyle(
+        fontSize: 16.fSize,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'Fustat',
+      );
+  TextStyle get display40ExtraBoldFustat => TextStyle(
+        fontSize: 40.fSize,
+        fontWeight: FontWeight.w800,
+        fontFamily: 'Fustat',
+      );
+
+  TextStyle get display32SemiBoldFustat => TextStyle(
+        fontSize: 32.fSize,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'Fustat',
+      );
+  // Label Styles
+  // Small text styles for labels and captions
+
+  TextStyle get label10RegularFustat => TextStyle(
+        fontSize: 10.fSize,
+        fontWeight: FontWeight.w400,
+        fontFamily: 'Fustat',
+      );
+
+  TextStyle get label12RegularFustat => TextStyle(
+        fontSize: 12.fSize,
+        fontWeight: FontWeight.w400,
+        fontFamily: 'Fustat',
+      );
+
+
 }
+  

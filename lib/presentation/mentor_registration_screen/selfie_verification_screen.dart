@@ -1,4 +1,4 @@
-
+// This screen is for selfie verification during mentor registration (STEP 4 out of 6).
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -38,8 +38,6 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print('User not signed in');
-      // Optionally, show a message to the user
       return;
     }
 
@@ -68,8 +66,6 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
           'uploadedAt': FieldValue.serverTimestamp(),
         }
       }, SetOptions(merge: true));
-
-      print('Download URL: $url');
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

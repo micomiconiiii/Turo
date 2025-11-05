@@ -1,5 +1,5 @@
+// This screen is for ID upload during mentor registration (STEP 3 out of 6).
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:turo/presentation/mentor_registration_screen/selfie_verification_screen.dart';
@@ -88,7 +88,10 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
 
   void _onSkipPressed() {
     // TODO: Navigate to next screen
-    print('Skip pressed');
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => SelfieVerificationScreen()),
+        (route) => false);
   }
 
   @override
