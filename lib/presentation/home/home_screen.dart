@@ -1,10 +1,16 @@
+// file: home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:swipe_cards/swipe_cards.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
 import 'package:user_home_page/core/data/services/matching_data_service.dart';
-import 'widgets/profile_detail_card.dart';
-import '../../theme/app_theme.dart';
+import 'package:user_home_page/presentation/home/widgets/profile_detail_card.dart';
+import 'package:user_home_page/theme/app_theme.dart';
+
+// Define a reasonable height for the bottom navigation bar area
+const double _kBottomNavBarHeight = 80.0;
 
 class HomeScreen extends StatefulWidget {
+// ... (HomeScreen and _HomeScreenState definitions remain the same)
   const HomeScreen({super.key});
 
   @override
@@ -13,79 +19,73 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final MatchingDataService _matchingService = MatchingDataService();
-  late Future<List<MentorProfile>> _mentorsFuture;
-  int _currentIndex = 0;
-  final PageController _pageController = PageController();
+  final List<SwipeItem> _swipeItems = [];
+  late MatchEngine _matchEngine;
+  List<MentorProfile> _mentors = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _mentorsFuture = _matchingService.getSuggestedMatches('mentee123');
+    _loadMentors();
   }
 
-  /// Builds the top "hero" image with gradient and name/chips overlay.
+  Future<void> _loadMentors() async {
+    final mentors = await _matchingService.getSuggestedMatches('mentee123');
+
+    setState(() {
+      _mentors = mentors;
+      _isLoading = false;
+    });
+
+    _swipeItems.clear();
+    for (var mentor in mentors) {
+      _swipeItems.add(
+        SwipeItem(
+          content: mentor,
+          likeAction: () => _onSwipe(mentor, true),
+          nopeAction: () => _onSwipe(mentor, false),
+        ),
+      );
+    }
+
+    _matchEngine = MatchEngine(swipeItems: _swipeItems);
+  }
+
+  void _onSwipe(MentorProfile mentor, bool liked) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            liked ? 'You liked ${mentor.name}' : 'You skipped ${mentor.name}'),
+        duration: const Duration(milliseconds: 700),
+      ),
+    );
+  }
+
+  // _buildHeader remains the same as previous response
+
   Widget _buildHeader(MentorProfile mentor) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       child: Stack(
         children: [
-          // hero image
           SizedBox(
             height: 320,
             width: double.infinity,
-            child: Image.asset(
-              mentor.profileImageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.grey),
-            ),
+            child: mentor.profileImageUrl.startsWith('http')
+                ? Image.network(mentor.profileImageUrl, fit: BoxFit.cover)
+                : Image.asset(mentor.profileImageUrl, fit: BoxFit.cover),
           ),
-
-          // dark gradient so text is readable
           Container(
             height: 320,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.45),
-                ],
-                stops: const [0.4, 1.0],
+                colors: [Colors.transparent, Color(0x73000000)],
               ),
             ),
           ),
-
-          // top app bar row (TURO + icons)
-          const Positioned(
-            top: 18,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'TURO',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.notifications_none,
-                        color: Colors.white, size: 26),
-                    SizedBox(width: 12),
-                    Icon(Icons.account_circle, color: Colors.white, size: 26),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // bottom name + chips
           Positioned(
             bottom: 18,
             left: 18,
@@ -93,10 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  mentor.name,
-                  style: AppTheme.montserratName,
-                ),
+                Text(mentor.name, style: AppTheme.montserratName),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -109,85 +106,141 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppTheme.chipGreen,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        e,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w600),
-                      ),
+                      child: Text(e,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600)),
                     );
                   }).toList(),
                 ),
               ],
             ),
-          )
+          ),
         ],
+      ),
+    );
+  }
+
+  // FIX: Use ListView to make the entire card scrollable.
+  Widget _buildCard(MentorProfile mentor) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      clipBehavior: Clip.antiAlias,
+      child: ListView(
+        // IMPORTANT: No padding here. The padding for the bottom bar is handled
+        // by the parent Positioned widget in the build method.
+        padding: EdgeInsets.zero,
+        children: [
+          // Header (Image, Name, Expertise)
+          _buildHeader(mentor),
+          // Details
+          ProfileDetailCard(mentor: mentor),
+        ],
+      ),
+    );
+  }
+
+  // _buildAppBar remains the same as previous response
+
+  Widget _buildAppBar() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 16,
+          right: 16,
+          bottom: 10,
+        ),
+        color: Colors.transparent,
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'TURO',
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold),
+            ),
+            Row(
+              children: [
+                Icon(Icons.notifications_none, color: Colors.black, size: 26),
+                SizedBox(width: 12),
+                Icon(Icons.account_circle, color: Colors.black, size: 26),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final double headerHeight = MediaQuery.of(context).padding.top + 50;
+
+    // We will assume the full screen height (MediaQuerry.size.height) and subtract the bottom bar height
+    // Or, more simply, use the 'bottom' property of Positioned.fill.
+
     return Scaffold(
-      body: FutureBuilder<List<MentorProfile>>(
-        future: _mentorsFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final mentors = snapshot.data!;
-          return PageView.builder(
-            controller: _pageController,
-            itemCount: mentors.length,
-            onPageChanged: (index) => setState(() => _currentIndex = index),
-            itemBuilder: (context, index) {
-              final mentor = mentors[index];
-
-              // Entire page is a rounded elevated Card — this ensures the image and details
-              // are visually contained together and the details scroll independently.
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 28),
-                child: Card(
-                  elevation: 6,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      // header image (clipped by card)
-                      _buildHeader(mentor),
-
-                      // details area (scrollable)
-                      Expanded(
-                        child: ProfileDetailCard(mentor: mentor),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _mentors.isEmpty
+              ? const Center(child: Text('No more mentors available.'))
+              : Stack(
+                  children: [
+                    // 1. Swipe Cards - Define fixed top and bottom boundaries.
+                    Positioned.fill(
+                      top: headerHeight,
+                      // FIX HERE: Set a fixed bottom padding to reserve space for the bottom nav bar.
+                      // The cards will now end here instead of filling the whole screen.
+                      bottom: _kBottomNavBarHeight,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: SwipeCards(
+                          matchEngine: _matchEngine,
+                          itemBuilder: (BuildContext context, int index) {
+                            final mentor = _mentors[index];
+                            return _buildCard(mentor);
+                          },
+                          onStackFinished: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'You’ve reached the end of the list!')),
+                            );
+                          },
+                          upSwipeAllowed: false,
+                          fillSpace: true,
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    // 2. The App Bar (layered on top)
+                    _buildAppBar(),
+
+                    // 3. Placeholder for Bottom Navigation Bar (Optional, for visual alignment)
+                    // You will replace this with your actual BottomNavigationBar later.
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: _kBottomNavBarHeight,
+                      child: Container(
+                        color: Colors
+                            .white, // Use your actual nav bar background color
+                        child: Center(
+                          child: Text(
+                              'Bottom Nav Bar Area (${_kBottomNavBarHeight.toInt()}px)',
+                              style: const TextStyle(color: Colors.grey)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppTheme.primary,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white70,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month), label: 'Sessions'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.save), label: 'Saved'),
-        ],
-      ),
     );
   }
 }
