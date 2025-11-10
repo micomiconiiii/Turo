@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'provider_storage/storage.dart';
+import 'package:turo_app/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
 /// DurationStep lets the mentee choose a single mentorship duration.
 ///

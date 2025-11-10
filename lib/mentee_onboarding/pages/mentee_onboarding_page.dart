@@ -3,21 +3,23 @@ import 'package:flutter/material.dart';
 // Provider access helpers for reading/watching ChangeNotifiers.
 import 'package:provider/provider.dart';
 // Individual step widgets with their State classes for keys/access.
-import 'package:turo_app/mentee-onboarding/budget_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/budget_step.dart'
     show BudgetStep, BudgetStepState;
 // Confirmation page imported with alias to avoid name collision.
-import 'package:turo_app/mentee-onboarding/confirmation_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/confirmation_step.dart'
     as confirmation_step;
-import 'package:turo_app/mentee-onboarding/duration_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/duration_step.dart'
     show DurationStep, DurationStepState;
-import 'package:turo_app/mentee-onboarding/goals_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/goals_step.dart'
     show GoalsStep, GoalsStepState;
-import 'package:turo_app/mentee-onboarding/interests_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/interests_step.dart'
     show InterestsStep, InterestsStepState;
-import 'package:turo_app/mentee-onboarding/personal_info_step.dart'
+import 'package:turo_app/mentee_onboarding/steps/personal_info_step.dart'
     show PersonalInfoStep, PersonalInfoStepState;
+import 'package:turo_app/mentee_onboarding/steps/profile_picture_step.dart'
+    show ProfilePictureStep, ProfilePictureStepState;
 // Global onboarding provider to persist step data.
-import 'package:turo_app/mentee-onboarding/provider_storage/storage.dart';
+import 'package:turo_app/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
 /// A stepper-style onboarding page that hosts multiple step widgets and
 /// controls navigation between them.
@@ -35,6 +37,7 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
   final _goalsKey = GlobalKey<GoalsStepState>();
   final _durationKey = GlobalKey<DurationStepState>();
   final _budgetKey = GlobalKey<BudgetStepState>();
+  final _profilePictureKey = GlobalKey<ProfilePictureStepState>();
 
   // Ordered list of step widgets displayed in the flow.
   late final List<Widget> _steps;
@@ -52,14 +55,14 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
       GoalsStep(key: _goalsKey),
       DurationStep(key: _durationKey),
       BudgetStep(key: _budgetKey),
+      ProfilePictureStep(key: _profilePictureKey),
     ];
   }
 
-  void _goNext() {
+  Future<void> _goNext() async {
     // Validate and persist current step; if it fails, don't navigate.
-    if (!_persistCurrentStepData()) {
-      return;
-    }
+    final ok = await _persistCurrentStepData();
+    if (!ok || !mounted) return;
 
     // If not on last step, move forward; else navigate to confirmation.
     if (_currentIndex < _steps.length - 1) {
@@ -80,7 +83,7 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
     }
   }
 
-  bool _persistCurrentStepData() {
+  Future<bool> _persistCurrentStepData() async {
     // Access provider without listening to avoid rebuilds.
     final onboardingProvider = context.read<MenteeOnboardingProvider>();
 
@@ -139,6 +142,11 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
         onboardingProvider.setMinBudget(state.minBudget);
         onboardingProvider.setMaxBudget(state.maxBudget);
         return true;
+      case 5:
+        // Profile picture step: just validate (upload happens on confirmation).
+        final state = _profilePictureKey.currentState;
+        if (state == null) return true;
+        return await state.validateStep();
     }
 
     return true;
@@ -149,6 +157,20 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
     // We embed the active step inside a Column and provide shared navigation
     // controls so the individual steps don't manage top-level Scaffolds.
     final step = _steps[_currentIndex];
+
+    // Determine the primary button label dynamically for the Profile Picture step.
+    final isLastStep = _currentIndex == _steps.length - 1;
+    String primaryLabel;
+    if (isLastStep) {
+      // Watch provider so the label updates when user selects/clears an image.
+      final onboardingProvider = context.watch<MenteeOnboardingProvider>();
+      final hasImage =
+          onboardingProvider.profilePictureFile != null ||
+          onboardingProvider.profilePictureBytes != null;
+      primaryLabel = hasImage ? 'Finish' : 'Skip';
+    } else {
+      primaryLabel = 'Next';
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -213,7 +235,7 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _goNext,
+                  onPressed: () async => _goNext(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10403B),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -223,7 +245,7 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
                     ),
                   ),
                   child: Text(
-                    _currentIndex < _steps.length - 1 ? 'Next' : 'Finish',
+                    primaryLabel,
                     style: const TextStyle(
                       color: Color(0xFFFEFEFE),
                       fontSize: 18,

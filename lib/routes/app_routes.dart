@@ -1,7 +1,7 @@
 // Minimal Flutter widget import (no material) for route builders.
 import 'package:flutter/widgets.dart';
 // The onboarding page shown at app start.
-import 'package:turo_app/features/mentee_onboarding/pages/mentee_onboarding_page.dart';
+import 'package:turo_app/mentee_onboarding/pages/mentee_onboarding_page.dart';
 
 /// Centralized named routes for the application.
 class AppRoutes {

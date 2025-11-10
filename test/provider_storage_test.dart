@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:turo_app/mentee-onboarding/provider_storage/storage.dart';
+import 'package:turo_app/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
 void main() {
   group('MenteeOnboardingProvider.setAddressDetails', () {

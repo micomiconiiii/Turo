@@ -9,7 +9,7 @@ import 'package:turo_app/routes/app_routes.dart';
 // Provider package for dependency injection and state management.
 import 'package:provider/provider.dart';
 // Global onboarding state storage (ChangeNotifier) used across steps.
-import 'package:turo_app/mentee-onboarding/provider_storage/storage.dart';
+import 'package:turo_app/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 // Firebase core initialization and generated options
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';

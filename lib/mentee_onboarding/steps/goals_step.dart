@@ -1,41 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'provider_storage/storage.dart';
+import 'package:turo_app/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
-/// InterestsStep collects one or more areas of interest.
+/// GoalsStep collects one or more mentorship goals.
 ///
 /// Highlights:
 /// - Predefined list presented with checkboxes.
-/// - "Other" row opens a brand-styled dialog to add custom interests.
-/// - Custom interests render as auto-selected rows with a remove action.
+/// - "Other" row opens a brand-styled dialog to add custom goals.
+/// - Custom goals appear as auto-selected rows with a remove action (no checkbox).
 ///
 /// Contract:
-/// - Read [selectedInterests] to obtain all chosen interests as an immutable
-///   set (predefined + custom). Parent is responsible for persisting.
+/// - Read [selectedGoals] to obtain a combined, immutable set of all chosen
+///   goals (predefined + custom). Parent is responsible for persisting.
 
-class InterestsStep extends StatefulWidget {
-  const InterestsStep({super.key});
+class GoalsStep extends StatefulWidget {
+  const GoalsStep({super.key});
 
   @override
-  State<InterestsStep> createState() => InterestsStepState();
+  State<GoalsStep> createState() => GoalsStepState();
 }
 
-class InterestsStepState extends State<InterestsStep> {
-  final List<String> _allInterests = [
-    'Information Technology',
-    'Business',
-    'Science',
-    'Arts',
-    'Engineering',
-    'Mathematics',
-    'Health',
-    'Education',
-    'Social Sciences',
-    'Languages',
-    'Sports',
+class GoalsStepState extends State<GoalsStep> {
+  final List<String> _allGoals = [
+    'Career Development',
+    'Business Consultation',
+    'Academics',
+    'Personal Growth',
   ];
-  final Set<String> _selectedInterests = {};
-  final List<String> _customInterests = [];
+
+  final Set<String> _selectedGoals = {};
+  final List<String> _customGoals = [];
 
   @override
   void initState() {
@@ -47,19 +41,19 @@ class InterestsStepState extends State<InterestsStep> {
         listen: false,
       );
 
-      // Get all selected interests from provider
-      final providerInterests = provider.selectedInterests;
+      // Get all selected goals from provider
+      final providerGoals = provider.selectedGoals;
 
-      if (providerInterests.isNotEmpty) {
+      if (providerGoals.isNotEmpty) {
         setState(() {
-          // Separate predefined interests from custom interests
-          for (final interest in providerInterests) {
-            if (_allInterests.contains(interest)) {
-              // This is a predefined interest
-              _selectedInterests.add(interest);
+          // Separate predefined goals from custom goals
+          for (final goal in providerGoals) {
+            if (_allGoals.contains(goal)) {
+              // This is a predefined goal
+              _selectedGoals.add(goal);
             } else {
-              // This is a custom interest
-              _customInterests.add(interest);
+              // This is a custom goal
+              _customGoals.add(goal);
             }
           }
         });
@@ -68,15 +62,16 @@ class InterestsStepState extends State<InterestsStep> {
   }
 
   /// Returns an immutable union of predefined selections and custom entries.
-  Set<String> get selectedInterests {
-    // Combine predefined and custom interests
-    final combined = <String>{..._selectedInterests, ..._customInterests};
+  Set<String> get selectedGoals {
+    // Combine predefined and custom goals
+    final combined = <String>{..._selectedGoals, ..._customGoals};
     return Set.unmodifiable(combined);
   }
 
-  /// Opens an input dialog for adding a custom interest.
-  /// Custom entries appear as pre-selected rows and can be removed.
-  void _showAddCustomInterestDialog() {
+  /// Opens an input dialog for adding a custom goal.
+  /// The newly added goal is displayed as pre-selected (no checkbox) and can
+  /// be removed from the list.
+  void _showAddCustomGoalDialog() {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -84,7 +79,7 @@ class InterestsStepState extends State<InterestsStep> {
         backgroundColor: const Color(0xFFFEFEFE),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
-          'Add Other Interest',
+          'Add Other Goal',
           style: TextStyle(
             color: Color(0xFF10403B),
             fontWeight: FontWeight.w600,
@@ -94,7 +89,7 @@ class InterestsStepState extends State<InterestsStep> {
         content: TextField(
           controller: controller,
           decoration: InputDecoration(
-            hintText: 'Enter your interest',
+            hintText: 'Enter your mentorship goal',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF2C6A64)),
@@ -118,10 +113,10 @@ class InterestsStepState extends State<InterestsStep> {
           ElevatedButton(
             onPressed: () {
               final custom = controller.text.trim();
-              if (custom.isNotEmpty && !_customInterests.contains(custom)) {
+              if (custom.isNotEmpty && !_customGoals.contains(custom)) {
                 setState(() {
-                  _customInterests.add(custom);
-                  // Auto-select the custom interest (it's already included in selectedInterests getter)
+                  _customGoals.add(custom);
+                  // Auto-select the custom goal (it's already included in selectedGoals getter)
                 });
               }
               Navigator.of(context).pop();
@@ -147,14 +142,14 @@ class InterestsStepState extends State<InterestsStep> {
   @override
   Widget build(BuildContext context) {
     const darkGreen = Color(0xFF2C6A64);
-    // Wrap content with horizontal padding to align with page margins
+    // Outer padding to match screen margins
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          // Header block with icon, title, and helper text
+          // Header: icon + title + helper text
           Center(
             child: Column(
               children: [
@@ -162,19 +157,19 @@ class InterestsStepState extends State<InterestsStep> {
                   radius: 60,
                   backgroundColor: darkGreen,
                   child: const Icon(
-                    Icons.science_outlined,
+                    Icons.person_pin_outlined,
                     color: Colors.white,
                     size: 50,
                   ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Interests',
+                  'Mentorship Goals',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Tick the boxes below that match your interests.',
+                  'Select the goals you want to achieve through mentorship.',
                   style: TextStyle(fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
@@ -182,56 +177,55 @@ class InterestsStepState extends State<InterestsStep> {
             ),
           ),
           const SizedBox(height: 16),
-          // Interests list expands within parent
           Expanded(
             child: ListView.builder(
               itemCount:
-                  _allInterests.length +
-                  _customInterests.length +
+                  _allGoals.length +
+                  _customGoals.length +
                   1, // +1 for "Other" item
               itemBuilder: (context, index) {
-                // Show predefined interests first
-                if (index < _allInterests.length) {
-                  final interest = _allInterests[index];
+                // Show predefined goals first
+                if (index < _allGoals.length) {
+                  final goal = _allGoals[index];
                   return CheckboxListTile(
-                    title: Text(interest),
-                    value: _selectedInterests.contains(interest),
+                    title: Text(goal),
+                    value: _selectedGoals.contains(goal),
                     activeColor: darkGreen,
                     onChanged: (bool? selected) {
                       setState(() {
                         if (selected == true) {
-                          _selectedInterests.add(interest);
+                          _selectedGoals.add(goal);
                         } else {
-                          _selectedInterests.remove(interest);
+                          _selectedGoals.remove(goal);
                         }
                       });
                     },
-                  ); // return CheckboxListTile for a predefined option
-                } else if (index <
-                    _allInterests.length + _customInterests.length) {
-                  // Custom interests - auto-selected, no checkbox, just remove button
-                  final customIndex = index - _allInterests.length;
-                  final customInterest = _customInterests[customIndex];
+                  ); // return CheckboxListTile for predefined
+                } else if (index < _allGoals.length + _customGoals.length) {
+                  // Custom goals - auto-selected, no checkbox, just remove button
+                  final customIndex = index - _allGoals.length;
+                  final customGoal = _customGoals[customIndex];
                   return ListTile(
                     leading: const Icon(
                       Icons.check_circle,
                       color: Color(0xFF2C6A64),
                     ),
-                    title: Text(customInterest),
+                    title: Text(customGoal),
                     trailing: IconButton(
                       icon: const Icon(Icons.close, size: 20),
                       color: Colors.grey[600],
                       tooltip: 'Remove',
                       onPressed: () {
                         setState(() {
-                          _customInterests.removeAt(customIndex);
+                          _customGoals.removeAt(customIndex);
                         });
                       },
                     ),
-                  ); // return ListTile for an auto-selected custom item
+                  ); // return ListTile for custom goal row
                 } else {
-                  // "Other" option with plus icon at the bottom. Padding and
-                  // spacing align the icon with the checkbox column visually.
+                  // "Other" option with plus icon at the bottom.
+                  // The plus icon is aligned with the checkbox column via
+                  // content padding and spacing to maintain visual rhythm.
                   return ListTile(
                     contentPadding: const EdgeInsets.only(
                       left: 16.0,
@@ -248,8 +242,8 @@ class InterestsStepState extends State<InterestsStep> {
                         ),
                       ],
                     ),
-                    onTap: _showAddCustomInterestDialog,
-                  ); // return ListTile to trigger add dialog
+                    onTap: _showAddCustomGoalDialog,
+                  ); // return ListTile for "Other" add flow
                 }
               },
             ),
