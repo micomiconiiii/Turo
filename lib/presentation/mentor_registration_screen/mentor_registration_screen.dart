@@ -1,12 +1,15 @@
 // This screen is for mentor registration (STEP 1 out of 6).
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../widgets/city_field.dart';
+import '../../services/database_service.dart';
+import '../../models/user_model.dart';
+import '../../models/user_detail_model.dart';
 import 'institutional_verification_screen.dart';
 
 class MentorRegistrationScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class MentorRegistrationScreen extends StatefulWidget {
 
 class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _monthController = TextEditingController();
   final TextEditingController _dayController = TextEditingController();
@@ -27,7 +31,8 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _addressUnitBldgController =
       TextEditingController();
-  final TextEditingController _addressStreetController = TextEditingController();
+  final TextEditingController _addressStreetController =
+      TextEditingController();
   final TextEditingController _addressBarangayController =
       TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -349,35 +354,61 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
 
   Future<void> _saveProfileData(BuildContext context) async {
     try {
+      // Get the current user ID and email from FirebaseAuth
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        throw Exception('No authenticated user found');
+      }
+
+      final email = FirebaseAuth.instance.currentUser?.email;
+      if (email == null) {
+        throw Exception('User email not found');
+      }
+
+      // Parse birthdate from form controllers
       final int month = int.parse(_monthController.text);
       final int day = int.parse(_dayController.text);
       final int year = int.parse(_yearController.text);
       final DateTime birthdate = DateTime(year, month, day);
 
-      // This is the data payload we will send to our Cloud Function.
-      final Map<String, dynamic> userProfileData = {
-        'fullName': _fullNameController.text,
-        'birthdate': birthdate.toIso8601String(), // Send as a string
-        'bio': _bioController.text,
-        'address': {
-          'unitBldg': _addressUnitBldgController.text,
-          'street': _addressStreetController.text,
-          'barangay': _addressBarangayController.text,
-          'city': _cityController.text,
-          'province': _provinceController.text,
-          'zipCode': _zipCodeController.text,
-        },
-        'roles': ['mentor'], // Set role to mentor
-      };
+      // Build full address string from address parts
+      final addressParts = [
+        if (_addressUnitBldgController.text.isNotEmpty)
+          _addressUnitBldgController.text,
+        if (_addressStreetController.text.isNotEmpty)
+          _addressStreetController.text,
+        if (_addressBarangayController.text.isNotEmpty)
+          'Brgy. ${_addressBarangayController.text}',
+        if (_cityController.text.isNotEmpty) _cityController.text,
+        if (_provinceController.text.isNotEmpty) _provinceController.text,
+        if (_zipCodeController.text.isNotEmpty) _zipCodeController.text,
+      ];
+      final fullAddress = addressParts.join(', ');
 
-      // Get a reference to the callable Cloud Function.
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('saveUserProfile');
-      
-      // Call the function and pass the data payload.
-      await callable.call({
-        'uid': widget.uid,
-        'data': userProfileData,
-      });
+      // Create the UserModel (for the public users collection)
+      // Note: mentorProfile will be added later in the mentor verification steps
+      final user = UserModel(
+        userId: uid,
+        displayName: _fullNameController.text,
+        bio: _bioController.text,
+        profilePictureUrl: null, // Will be set later if mentor uploads a photo
+        roles: ['mentor'],
+        menteeProfile: null,
+        mentorProfile: null, // Will be populated in later steps
+      );
+
+      // Create the UserDetailModel (for the private user_details collection)
+      final userDetail = UserDetailModel(
+        userId: uid,
+        email: email,
+        fullName: _fullNameController.text,
+        birthdate: Timestamp.fromDate(birthdate),
+        address: fullAddress,
+        createdAt: Timestamp.now(),
+      );
+
+      // Save to Firestore using the new 3-Layer Schema
+      await _databaseService.updateMenteeOnboardingData(uid, user, userDetail);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -386,6 +417,8 @@ class _MentorRegistrationScreenState extends State<MentorRegistrationScreen> {
             backgroundColor: appTheme.blue_gray_700,
           ),
         );
+
+        // Navigate to the next step
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => InstitutionalVerificationScreen(),

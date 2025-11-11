@@ -217,7 +217,10 @@ export const helloWorld = functions.https.onRequest((request, response) => {
 /**
  * A callable Cloud Function to save a user's profile data.
  * It connects to the named 'turo' database and saves the data provided
- * by the authenticated user.
+ * by the authenticated user using the new 3-Layer Schema.
+ * 
+ * DEPRECATED: This function uses the old schema. Consider refactoring to use
+ * the new 3-Layer Schema with 'users' and 'user_details' collections.
  */
 export const saveUserProfile = functions.https.onCall(async (request) => {
   // Ensure the user is authenticated.
@@ -235,6 +238,14 @@ export const saveUserProfile = functions.https.onCall(async (request) => {
   const uid = request.auth.uid;
   const data = request.data;
 
+  // Validate that data exists
+  if (!data || typeof data !== 'object') {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Profile data is required."
+    );
+  }
+
   // Create a new object with the client data and server-side additions.
   const profileToSave = {
     ...data,
@@ -243,7 +254,10 @@ export const saveUserProfile = functions.https.onCall(async (request) => {
   };
 
   try {
-    // Save the data to the 'user_profiles' collection in the 'turo' database.
+    // WARNING: Using old schema 'user_profiles' collection
+    // TODO: Refactor to use new 3-Layer Schema:
+    // - 'users' collection for public data
+    // - 'user_details' collection for private data
     await turoDb
       .collection("user_profiles")
       .doc(uid)

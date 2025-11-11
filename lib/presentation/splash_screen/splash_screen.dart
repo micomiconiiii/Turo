@@ -11,7 +11,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Navigate to the login screen after a delay
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(Duration(seconds: 2), () {
       Navigator.pushReplacementNamed(context, AppRoutes.loginScreen);
     });
   }
@@ -23,10 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: Text(
           'Turo',
-          style: TextStyle(
-            fontSize: 48.0,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 48.0, fontWeight: FontWeight.bold),
         ),
       ),
     );

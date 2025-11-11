@@ -1,5 +1,4 @@
 // This screen is for selfie verification during mentor registration (STEP 4 out of 6).
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
@@ -8,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:turo/core/app_export.dart';
 import 'package:turo/widgets/custom_button.dart';
+import '../../services/auth_service.dart';
 
 class SelfieVerificationScreen extends StatefulWidget {
   const SelfieVerificationScreen({super.key});
@@ -18,6 +18,7 @@ class SelfieVerificationScreen extends StatefulWidget {
 }
 
 class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
+  final AuthService _authService = AuthService();
   XFile? _pickedFile;
   UploadTask? _uploadTask;
 
@@ -36,12 +37,14 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
       return;
     }
 
-    final user = FirebaseAuth.instance.currentUser;
+    // Use AuthService to get current user
+    final user = _authService.currentUser;
     if (user == null) {
       return;
     }
 
-    final fileName = 'selfie_verification/${DateTime.now().millisecondsSinceEpoch}';
+    final fileName =
+        'selfie_verification/${DateTime.now().millisecondsSinceEpoch}';
     final destination = 'users/${user.uid}/$fileName';
 
     try {
@@ -64,7 +67,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
         'selfieVerification': {
           'downloadUrl': url,
           'uploadedAt': FieldValue.serverTimestamp(),
-        }
+        },
       }, SetOptions(merge: true));
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,7 +143,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                   SizedBox(width: 2.h),
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
-                  
+
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
                   Expanded(
@@ -175,8 +178,10 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
               Center(
                 child: Text(
                   'Take a selfie to verify your identity',
-                  style: TextStyleHelper.instance.body12RegularFustat
-                      .copyWith(color: appTheme.gray_800, height: 1.5),
+                  style: TextStyleHelper.instance.body12RegularFustat.copyWith(
+                    color: appTheme.gray_800,
+                    height: 1.5,
+                  ),
                 ),
               ),
 
@@ -185,14 +190,8 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
               if (_pickedFile != null)
                 Center(
                   child: kIsWeb
-                      ? Image.network(
-                          _pickedFile!.path,
-                          height: 200,
-                        )
-                      : Image.file(
-                          File(_pickedFile!.path),
-                          height: 200,
-                        ),
+                      ? Image.network(_pickedFile!.path, height: 200)
+                      : Image.file(File(_pickedFile!.path), height: 200),
                 ),
 
               SizedBox(height: 20.h),
@@ -211,7 +210,8 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       final progress =
-                          snapshot.data!.bytesTransferred / snapshot.data!.totalBytes;
+                          snapshot.data!.bytesTransferred /
+                          snapshot.data!.totalBytes;
                       return Column(
                         children: [
                           SizedBox(height: 20.h),

@@ -3,11 +3,13 @@ import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
+import '../../services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
   bool rememberMe = false;
 
   LoginScreen({Key? key}) : super(key: key);
@@ -16,16 +18,35 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF10403B),
-      body: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              SizedBox(height: 86.h),
-              _buildLogoSection(context),
-              SizedBox(height: 42.h),
-              _buildLoginFormSection(context),
-            ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Back button
+                Padding(
+                  padding: EdgeInsets.only(left: 16.h, top: 16.h),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 28.h,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                _buildLogoSection(context),
+                SizedBox(height: 42.h),
+                _buildLoginFormSection(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -53,8 +74,10 @@ class LoginScreen extends StatelessWidget {
             padding: EdgeInsets.only(right: 24.h),
             child: Text(
               'TURO',
-              style: TextStyleHelper.instance.display40ExtraBoldFustat
-                  .copyWith(height: 1.43, color: Color(0xFFFFFFFF)),
+              style: TextStyleHelper.instance.display40ExtraBoldFustat.copyWith(
+                height: 1.43,
+                color: Color(0xFFFFFFFF),
+              ),
             ),
           ),
         ],
@@ -77,16 +100,20 @@ class LoginScreen extends StatelessWidget {
             padding: EdgeInsets.only(left: 4.h),
             child: Text(
               'Log in',
-              style: TextStyleHelper.instance.display32SemiBoldFustat
-                  .copyWith(height: 1.44, color: Color(0xFF3D3D3D)),
+              style: TextStyleHelper.instance.display32SemiBoldFustat.copyWith(
+                height: 1.44,
+                color: Color(0xFF3D3D3D),
+              ),
             ),
           ),
           Padding(
             padding: EdgeInsets.only(left: 4.h),
             child: Text(
               'Please Sign in to continue',
-              style: TextStyleHelper.instance.body16RegularFustat
-                  .copyWith(height: 1.44, color: Color(0xFF3D3D3D)),
+              style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+                height: 1.44,
+                color: Color(0xFF3D3D3D),
+              ),
             ),
           ),
           SizedBox(height: 28.h),
@@ -150,17 +177,16 @@ class LoginScreen extends StatelessWidget {
         children: [
           Text(
             'Remember me',
-            style: TextStyleHelper.instance.body16SemiBoldFustat
-                .copyWith(height: 1.44, color: Color(0xFF2C6A64)),
+            style: TextStyleHelper.instance.body16SemiBoldFustat.copyWith(
+              height: 1.44,
+              color: Color(0xFF2C6A64),
+            ),
           ),
           Container(
             width: 20.h,
             height: 20.h,
             decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xFF10403B),
-                width: 1.h,
-              ),
+              border: Border.all(color: Color(0xFF10403B), width: 1.h),
               borderRadius: BorderRadius.circular(5.h),
             ),
           ),
@@ -179,13 +205,17 @@ class LoginScreen extends StatelessWidget {
             children: [
               TextSpan(
                 text: "Don't have an account yet? ",
-                style: TextStyleHelper.instance.body16RegularFustat
-                    .copyWith(height: 1.44, color: Color(0xFF3D3D3D)),
+                style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+                  height: 1.44,
+                  color: Color(0xFF3D3D3D),
+                ),
               ),
               TextSpan(
                 text: "Sign up",
-                style: TextStyleHelper.instance.body16SemiBoldFustat
-                    .copyWith(height: 1.38, color: Color(0xFF2C6A64)),
+                style: TextStyleHelper.instance.body16SemiBoldFustat.copyWith(
+                  height: 1.38,
+                  color: Color(0xFF2C6A64),
+                ),
               ),
             ],
           ),
@@ -194,22 +224,42 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  void _onLoginPressed(BuildContext context) {
+  void _onLoginPressed(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Clear form fields after successful validation
-      usernameController.clear();
-      passwordController.clear();
+      try {
+        // Use AuthService to sign in
+        final user = await _authService.signInWithEmailPassword(
+          usernameController.text,
+          passwordController.text,
+        );
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login successful!'),
-          backgroundColor: Color(0xFF10403B),
-        ),
-      );
+        if (user != null) {
+          // Clear form fields after successful login
+          usernameController.clear();
+          passwordController.clear();
 
-      // Navigate to splash screen (as it's the only other screen available)
-      Navigator.of(context).pushReplacementNamed(AppRoutes.splashScreen);
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Color(0xFF10403B),
+            ),
+          );
+
+          // Navigate to app navigation screen (main app)
+          Navigator.of(
+            context,
+          ).pushReplacementNamed(AppRoutes.appNavigationScreen);
+        }
+      } catch (e) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

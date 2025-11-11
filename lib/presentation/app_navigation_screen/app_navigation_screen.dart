@@ -25,52 +25,40 @@ class AppNavigationScreen extends StatelessWidget {
                       ),
                       _buildScreenTitle(
                         context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
                         screenTitle: "Log in",
                         onTapScreenTitle: () =>
                             onTapScreenTitle(context, AppRoutes.loginScreen),
                       ),
                       _buildScreenTitle(
                         context,
-                        screenTitle: "Sign Up - Mentee",
+                        screenTitle: "User registration",
                         onTapScreenTitle: () => onTapScreenTitle(
-                            context, AppRoutes.userRegistrationScreen),
+                          context,
+                          AppRoutes.userRegistrationScreen,
+                        ),
                       ),
                       _buildScreenTitle(
                         context,
                         screenTitle: "Sign Up- Mentor",
                         onTapScreenTitle: () => Navigator.pushNamed(
-                            context, AppRoutes.mentorRegistrationScreen,
-                            arguments: 'dummy_uid'),
+                          context,
+                          AppRoutes.mentorRegistrationScreen,
+                          arguments: 'dummy_uid',
+                        ),
                       ),
                       _buildScreenTitle(
                         context,
                         screenTitle: "Terms and Conditions",
                         onTapScreenTitle: () => onTapScreenTitle(
-                            context, AppRoutes.termsAndConditionsScreen),
+                          context,
+                          AppRoutes.termsAndConditionsScreen,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -99,13 +87,11 @@ class AppNavigationScreen extends StatelessWidget {
                 Text(
                   screenTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyleHelper.instance.title20RegularRoboto
-                      .copyWith(color: Color(0XFF000000)),
+                  style: TextStyleHelper.instance.title20RegularRoboto.copyWith(
+                    color: Color(0XFF000000),
+                  ),
                 ),
-                Icon(
-                  Icons.arrow_forward,
-                  color: Color(0XFF343330),
-                )
+                Icon(Icons.arrow_forward, color: Color(0XFF343330)),
               ],
             ),
             SizedBox(height: 10.h),
