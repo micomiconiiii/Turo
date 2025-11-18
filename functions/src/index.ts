@@ -7,8 +7,6 @@ import {defineString} from "firebase-functions/params";
 const emailProvider = defineString("EMAIL");
 const passwordProvider = defineString("PASSWORD");
 
-console.log("Email used:", emailProvider.value());
-console.log("Password length:", passwordProvider.value()?.length);
 // Initialize Firebase Admin SDK and Firestore
 admin.initializeApp();
 const db = admin.firestore();
@@ -23,16 +21,18 @@ interface VerifyEmailOTPData {
   otp: string;
 }
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
+// Configure Nodemailer - get values lazily to avoid deployment timeouts
+function getTransporter() {
+  return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
     auth: {
-        user: emailProvider.value(),
-        pass: passwordProvider.value(),
+      user: emailProvider.value(),
+      pass: passwordProvider.value(),
     },
-});
+  });
+}
 
 /**
  * A callable Cloud Function to request an OTP for a given email address.
@@ -135,6 +135,7 @@ export const requestEmailOTP = functions.https.onCall(async (request) => {
       `,
     };
 
+    const transporter = getTransporter();
     await transporter.sendMail(mailOptions);
     console.log("📧 OTP email sent successfully");
     return { success: true, message: "OTP sent successfully." };
@@ -213,6 +214,9 @@ export const helloWorld = functions.https.onRequest((request, response) => {
   functions.logger.info("Hello logs!", {structuredData: true});
   response.send("Hello from Firebase!");
 });
+
+// Import and export admin analytics functions (organized by feature)
+export * as adminAnalytics from "./admin/analytics";
 
 /**
  * A callable Cloud Function to save a user's profile data.

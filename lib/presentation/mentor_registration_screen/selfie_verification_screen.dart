@@ -64,9 +64,9 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
 
       // Save the download URL to the user's profile in Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'selfieVerification': {
-          'downloadUrl': url,
-          'uploadedAt': FieldValue.serverTimestamp(),
+        'selfie_verification': {
+          'download_url': url,
+          'uploaded_at': FieldValue.serverTimestamp(),
         },
       }, SetOptions(merge: true));
 

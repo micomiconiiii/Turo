@@ -40,4 +40,32 @@ class UserModel {
       if (mentorProfile != null) 'mentor_profile': mentorProfile,
     };
   }
+
+  /// Creates a [UserModel] from a Firestore document map and ID.
+  ///
+  /// Parses nested profiles if present in the document.
+  factory UserModel.fromFirestore(Map<String, dynamic> data, String docId) {
+    return UserModel(
+      userId: data['user_id'] ?? docId,
+      displayName: data['display_name'] ?? '',
+      bio: data['bio'] ?? '',
+      profilePictureUrl: data['profile_picture_url'],
+      roles: List<String>.from(data['roles'] ?? []),
+      menteeProfile: data['mentee_profile'] != null
+          ? MenteeProfileModel(
+              goals: List<String>.from(data['mentee_profile']['goals'] ?? []),
+              interests: List<String>.from(
+                data['mentee_profile']['interests'] ?? [],
+              ),
+              budget: Map<String, double>.from(
+                data['mentee_profile']['budget'] ?? {},
+              ),
+              duration: data['mentee_profile']['duration'] ?? '',
+            )
+          : null,
+      mentorProfile: data['mentor_profile'] != null
+          ? Map<String, dynamic>.from(data['mentor_profile'])
+          : null,
+    );
+  }
 }
