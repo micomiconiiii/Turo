@@ -6,7 +6,9 @@ import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/custom_firebase_otp_service.dart';
-import './otp_verification_screen.dart';
+import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/user_model.dart';
+import 'otp_verification_screen.dart'; // Standardized import
 
 enum ButtonVariant {
   fillPrimary,
@@ -14,10 +16,20 @@ enum ButtonVariant {
 }
 
 class InstitutionalVerificationScreen extends StatefulWidget {
-  const InstitutionalVerificationScreen({super.key});
+  final UserModel user;
+  final UserDetailModel userDetail;
+  // Removed mentorProfile from constructor if it's not being used or passed from previous screen yet
+  // If you need it, keep it, but usually it is built step-by-step.
+  
+  const InstitutionalVerificationScreen({
+    super.key, 
+    required this.user, 
+    required this.userDetail
+  });
 
   @override
-  State<InstitutionalVerificationScreen> createState() => _InstitutionalVerificationScreenState();
+  State<InstitutionalVerificationScreen> createState() =>
+      _InstitutionalVerificationScreenState();
 }
 
 class _InstitutionalVerificationScreenState extends State<InstitutionalVerificationScreen> {
@@ -26,9 +38,10 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _jobController = TextEditingController();
 
-  void _onSendOTPPressed() async {
+ void _onSendOTPPressed() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final emailAddress = _emailController.text;
+      // 1. Capture the input
+      final institutionalEmailInput = _emailController.text.trim();
       
       showDialog(
         context: context,
@@ -37,20 +50,33 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
       );
       
       try {
-        final success = await CustomFirebaseOtpService.requestEmailOTP(emailAddress);
+        // 2. Request OTP
+        final success = await CustomFirebaseOtpService.requestEmailOTP(institutionalEmailInput);
         Navigator.pop(context);
         
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('OTP sent to $emailAddress'),
+              content: Text('OTP sent to $institutionalEmailInput'),
               backgroundColor: Colors.green,
             ),
           );
+          
+          // 3. Navigate with Correct Arguments
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(email: emailAddress),
+              builder: (context) => OtpVerificationScreen(
+                // ERROR FIX: Parameter name must match the constructor ('email')
+                email: institutionalEmailInput, 
+                
+                // Pass the user objects (Keep personal data intact)
+                user: widget.user,
+                userDetail: widget.userDetail, 
+                
+                // IMPT: Set this flag to true so the next screen knows this is NOT the personal email
+                isInstitutional: true, 
+              ),
             ),
           );
         } else {
@@ -71,11 +97,18 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
         );
       }
     }
-  }
-
+  } 
   void _onSkipPressed() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => IdUploadScreen()),
+      MaterialPageRoute(
+        builder: (context) => IdUploadScreen(
+          user: widget.user,
+          userDetail: widget.userDetail,
+          // [FIX] Pass null because the user skipped verification
+          // Ensure IdUploadScreen accepts String? for this parameter
+          institutionalEmail: null, 
+        ),
+      ),
     );
   }
 
@@ -164,6 +197,7 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 child: Text(
                   'Turo will send a verification code to verify your affiliation with the organization',
                   style: TextStyleHelper.instance.body12RegularFustat.copyWith(color: appTheme.gray_800, height: 1.5),
+                  textAlign: TextAlign.center, // Added align for better UI
                 ),
               ),
               SizedBox(height: 32.h),

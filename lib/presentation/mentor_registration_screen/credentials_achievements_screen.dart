@@ -1,14 +1,33 @@
-// This screen is for adding credentials and achievements during mentor registration (STEP 5 out of 6).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import 'package:turo/core/app_export.dart';
+import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/user_model.dart';
+import 'package:turo/presentation/mentor_registration_screen/confirm_submission_screen.dart';
 import 'package:turo/widgets/custom_button.dart';
 
 class CredentialsAchievementsScreen extends StatefulWidget {
-  const CredentialsAchievementsScreen({super.key});
+  final UserModel user;
+  final UserDetailModel userDetail;
+  final XFile? selfieFile;
+  final String? idType;
+  final String? idFileName;
+  final String? institutionalEmail;
+  final Uint8List? idFileBytes;
+
+  const CredentialsAchievementsScreen(
+  {super.key,
+  required this.user,
+  required this.userDetail,
+  this.selfieFile,
+  this.idType,
+  this.idFileName,
+  this.institutionalEmail,
+  this.idFileBytes});
 
   @override
   _CredentialsAchievementsScreenState createState() =>
@@ -70,14 +89,43 @@ class _CredentialsAchievementsScreenState
               CustomButton(
                 text: 'Submit',
                 onPressed: () {
-                  // TODO: Handle submit
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ConfirmSubmissionScreen(
+                        user: widget.user,
+                        userDetail: widget.userDetail,
+                        selfieFile: widget.selfieFile,
+                        credentials: _credentials,
+                        achievements: _achievements,
+                        institutionalEmail: widget.institutionalEmail,
+                        idType: widget.idType,
+                        idFileName: widget.idFileName,
+                        idFileBytes: widget.idFileBytes,
+                      ),
+                    ),
+                  );
                 },
               ),
               SizedBox(height: 16.h),
               CustomButton(
                 text: 'Skip',
                 onPressed: () {
-                  // TODO: Handle skip
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ConfirmSubmissionScreen(
+                        user: widget.user,
+                        userDetail: widget.userDetail,
+                        selfieFile: widget.selfieFile,
+                        idFileName: widget.idFileName,
+                        idFileBytes: widget.idFileBytes,
+                        institutionalEmail: widget.institutionalEmail,
+                        credentials: [],
+                        achievements: [],
+                      ),
+                    ),
+                  );
                 },
                 backgroundColor: Colors.transparent,
                 textColor: appTheme.blue_gray_700,

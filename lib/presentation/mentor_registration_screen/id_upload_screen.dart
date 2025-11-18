@@ -2,13 +2,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/user_model.dart';
 import 'package:turo/presentation/mentor_registration_screen/selfie_verification_screen.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 
 class IdUploadScreen extends StatefulWidget {
-  const IdUploadScreen({super.key});
+  final UserModel user;
+  final UserDetailModel userDetail;
+  final String? institutionalEmail;
+  const IdUploadScreen({super.key, required this.user, required this.userDetail, this.institutionalEmail,});
 
   @override
   State<IdUploadScreen> createState() => _IdUploadScreenState();
@@ -58,31 +64,42 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
   }
 
   void _onNextPressed() {
-    // if (_formKey.currentState?.validate() ?? false) {
-      if (_uploadedFile == null && _uploadedFileBytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please upload your ID'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      // Show success message
+    if (_uploadedFile == null && _uploadedFileBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('ID uploaded successfully'),
-          backgroundColor: Colors.green,
+          content: Text('Please upload your ID'),
+          backgroundColor: Colors.red,
         ),
       );
-      
-      // TODO: Navigate to next screen
-      
+      return;
+    }
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('ID uploaded successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // Navigate to next screen with ID data
+
       Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => SelfieVerificationScreen()),
-          (route) => false);print('Next pressed - ID Type: $_selectedIdType, File: $_fileName');
+        context,
+        MaterialPageRoute(
+          builder: (context) => SelfieVerificationScreen(
+            user: widget.user,
+            userDetail: widget.userDetail,
+            idType: _selectedIdType,
+            idFileName: _fileName,
+            idFileBytes: _uploadedFileBytes,
+            // [CRITICAL] Pass the email forward
+            institutionalEmail: widget.institutionalEmail, 
+          ),
+        ),
+        (route) => false,
+      );
+      print('Next pressed - ID Type: $_selectedIdType, File: $_fileName');
     // }
   }
 
@@ -90,7 +107,12 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
     // TODO: Navigate to next screen
     Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => SelfieVerificationScreen()),
+        MaterialPageRoute(
+            builder: (context) => SelfieVerificationScreen(
+                  user: widget.user,
+                  userDetail: widget.userDetail,
+                  institutionalEmail: widget.institutionalEmail,
+                )),
         (route) => false);
   }
 

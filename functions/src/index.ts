@@ -1,7 +1,9 @@
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
+import { onCall } from "firebase-functions/v2/https";
 import * as nodemailer from "nodemailer";
 import {defineString} from "firebase-functions/params";
+import admin, { auth, turoDb } from "./services/firebase";
+import { randomUUID } from 'crypto';
 
 // Define email and password as environment variables
 const emailProvider = defineString("EMAIL");
@@ -9,9 +11,6 @@ const passwordProvider = defineString("PASSWORD");
 
 console.log("Email used:", emailProvider.value());
 console.log("Password length:", passwordProvider.value()?.length);
-// Initialize Firebase Admin SDK and Firestore
-admin.initializeApp();
-const db = admin.firestore();
 
 // Define interfaces for callable function data
 interface RequestEmailOTPData {
@@ -56,7 +55,7 @@ export const requestEmailOTP = functions.https.onCall(async (request) => {
 
   console.log("🗄️ Attempting to save OTP to Firestore:", otpDoc);
 
-  await db.collection("otps").doc(email).set(otpDoc);
+  await turoDb.collection("otps").doc(email).set(otpDoc);
 
   console.log("✅ OTP saved to Firestore successfully");
 
@@ -160,7 +159,7 @@ export const verifyEmailOTP = functions.https.onCall(async (request) => {
         throw new functions.https.HttpsError("invalid-argument", "Email and OTP are required.");
     }
 
-    const otpDocRef = db.collection("otps").doc(email);
+    const otpDocRef = turoDb.collection("otps").doc(email);
     const otpDoc = await otpDocRef.get();
     const otpData = otpDoc.data();
     // Check if OTP document exists
@@ -190,12 +189,12 @@ export const verifyEmailOTP = functions.https.onCall(async (request) => {
     // Get an existing user or create a new one
     let userRecord;
     try {
-        userRecord = await admin.auth().getUserByEmail(email);
+        userRecord = await auth.getUserByEmail(email);
     } catch (e) {
         const error = e as { code: string };
         if (error.code === "auth/user-not-found") {
             // Create a new user if one doesn't exist
-            userRecord = await admin.auth().createUser({ email: email });
+            userRecord = await auth.createUser({ email: email });
         } else {
             // For other errors, rethrow
             throw new functions.https.HttpsError("internal", "Error retrieving user account.");
@@ -203,7 +202,7 @@ export const verifyEmailOTP = functions.https.onCall(async (request) => {
     }
 
     // Generate a custom token for the user to sign in with
-    const customToken = await admin.auth().createCustomToken(userRecord.uid);
+    const customToken = await auth.createCustomToken(userRecord.uid);
 
     // Return the token to the client
     return { success: true, token: customToken };
@@ -219,8 +218,14 @@ export const helloWorld = functions.https.onRequest((request, response) => {
  * It connects to the named 'turo' database and saves the data provided
  * by the authenticated user.
  */
-export const saveUserProfile = functions.https.onCall(async (request) => {
-  // Ensure the user is authenticated.
+export const saveUserProfile = onCall(
+  { 
+    memory: "1GiB",       // Increase memory to fix the crash
+    timeoutSeconds: 300,  // Increase timeout for large uploads
+    cors: true            // Enable CORS if needed
+  },
+  async (request) => { // Ensure the user is authenticated.
+  
   if (!request.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -228,27 +233,205 @@ export const saveUserProfile = functions.https.onCall(async (request) => {
     );
   }
 
-  // Initialize a separate Firestore instance for the 'turo' database.
-  const turoDb = admin.firestore();
-  turoDb.settings({ databaseId: 'turo' });
-
   const uid = request.auth.uid;
   const data = request.data;
 
-  // Create a new object with the client data and server-side additions.
-  const profileToSave = {
-    ...data,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    email: request.auth.token.email || null,
+  // Log the entire data object for debugging
+  console.log('Received data:', JSON.stringify(data, null, 2));
+
+  const user = data.user || {};
+  const userDetail = data.userDetail || {};
+
+  // Helper: recursively convert numeric/string date-like fields to Firestore Timestamps
+  const convertTimestampsRecursively = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) {
+      return obj.map((v) => convertTimestampsRecursively(v));
+    }
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (val == null) continue;
+
+      // If it's already a Firestore Timestamp leave it
+      if (val instanceof admin.firestore.Timestamp) continue;
+
+      // Keys that are likely timestamp/date fields
+      const lowerKey = key.toLowerCase();
+      const looksLikeDateKey = lowerKey.includes('date') || lowerKey.includes('created') || lowerKey.includes('expires') || lowerKey.includes('time');
+
+      if (looksLikeDateKey) {
+        if (typeof val === 'number') {
+          try {
+            obj[key] = admin.firestore.Timestamp.fromMillis(val);
+            continue;
+          } catch (e) {
+            console.warn(`Could not convert number to Timestamp for key=${key}`, e);
+          }
+        }
+        if (typeof val === 'string') {
+          const parsed = Date.parse(val);
+          if (!isNaN(parsed)) {
+            obj[key] = admin.firestore.Timestamp.fromDate(new Date(parsed));
+            continue;
+          }
+        }
+      }
+
+      // Recurse into nested objects/arrays
+      if (typeof val === 'object') {
+        convertTimestampsRecursively(val);
+      }
+    }
+    return obj;
   };
 
-  try {
-    // Save the data to the 'user_profiles' collection in the 'turo' database.
-    await turoDb
-      .collection("user_profiles")
-      .doc(uid)
-      .set(profileToSave, { merge: true });
+  // Sanity-check payloads and convert timestamps for both user and userDetail (and nested fields)
+  if (user && typeof user === 'object') {
+    convertTimestampsRecursively(user);
+  }
+  if (userDetail && typeof userDetail === 'object') {
+    convertTimestampsRecursively(userDetail);
+  }
 
+  // Add the email to the userDetail object
+  userDetail.email = request.auth.token.email || null;
+
+  // We'll upload any provided base64 files to Cloud Storage using the Admin SDK
+  // so the client doesn't need storage permissions. Collect resulting URLs and
+  // then write Firestore documents in a batch.
+  const bucket = admin.storage().bucket();
+
+  let selfieUrl: string | null = null;
+  let idFileUrl: string | null = null;
+
+  // Upload selfie if included
+  if (data.selfieBase64 && data.selfieFileName) {
+    try {
+      const selfieBuffer = Buffer.from(data.selfieBase64, 'base64');
+      const selfiePath = `users/${uid}/selfie/${data.selfieFileName}`;
+      const selfieToken = randomUUID();
+      const file = bucket.file(selfiePath);
+      await file.save(selfieBuffer, {
+        metadata: {
+          contentType: 'image/jpeg',
+          metadata: { firebaseStorageDownloadTokens: selfieToken },
+        },
+      });
+      const bucketName = bucket.name;
+      selfieUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(selfiePath)}?alt=media&token=${selfieToken}`;
+      // Also put on user object if desired
+      user.profile_picture_url = selfieUrl;
+    } catch (e) {
+      console.error('Error uploading selfie to Storage:', e);
+      // proceed but log
+    }
+  }
+
+  // Upload ID file if included
+  if (data.idBase64 && data.idFileName) {
+    try {
+      const idBuffer = Buffer.from(data.idBase64, 'base64');
+      const idPath = `users/${uid}/id_verification/${data.idFileName}`;
+      const idToken = randomUUID();
+      const file = bucket.file(idPath);
+      await file.save(idBuffer, {
+        metadata: {
+          contentType: 'application/octet-stream',
+          metadata: { firebaseStorageDownloadTokens: idToken },
+        },
+      });
+      const bucketName = bucket.name;
+      idFileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(idPath)}?alt=media&token=${idToken}`;
+    } catch (e) {
+      console.error('Error uploading ID file to Storage:', e);
+    }
+  }
+
+  // Process credentials and achievements: upload any certificates and map to URLs
+  const credentialsIn = Array.isArray(data.credentials) ? data.credentials : [];
+  const achievementsIn = Array.isArray(data.achievements) ? data.achievements : [];
+
+  const credentialsOut = [] as any[];
+  for (const cred of credentialsIn) {
+    const out: any = { title: cred.title || null, year: cred.year || null };
+    if (cred.certificateBase64 && cred.certificateFileName) {
+      try {
+        const certBuffer = Buffer.from(cred.certificateBase64, 'base64');
+        const certPath = `users/${uid}/credentials/${cred.certificateFileName}`;
+        const certToken = randomUUID();
+        const file = bucket.file(certPath);
+        await file.save(certBuffer, {
+          metadata: {
+            contentType: 'application/octet-stream',
+            metadata: { firebaseStorageDownloadTokens: certToken },
+          },
+        });
+        const bucketName = bucket.name;
+        out.certificateUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(certPath)}?alt=media&token=${certToken}`;
+      } catch (e) {
+        console.error('Error uploading credential certificate:', e);
+        out.certificateUrl = null;
+      }
+    }
+    credentialsOut.push(out);
+  }
+
+  const achievementsOut = [] as any[];
+  for (const ach of achievementsIn) {
+    const out: any = { title: ach.title || null, year: ach.year || null };
+    if (ach.certificateBase64 && ach.certificateFileName) {
+      try {
+        const certBuffer = Buffer.from(ach.certificateBase64, 'base64');
+        const certPath = `users/${uid}/achievements/${ach.certificateFileName}`;
+        const certToken = randomUUID();
+        const file = bucket.file(certPath);
+        await file.save(certBuffer, {
+          metadata: {
+            contentType: 'application/octet-stream',
+            metadata: { firebaseStorageDownloadTokens: certToken },
+          },
+        });
+        const bucketName = bucket.name;
+        out.certificateUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(certPath)}?alt=media&token=${certToken}`;
+      } catch (e) {
+        console.error('Error uploading achievement certificate:', e);
+        out.certificateUrl = null;
+      }
+    }
+    achievementsOut.push(out);
+  }
+
+  // Now write Firestore documents in a batch using the 'Turo' database
+  const batch = turoDb.batch();
+  const userRef = turoDb.collection('users').doc(uid);
+  // merge user to include profile_picture_url if set
+  batch.set(userRef, user, { merge: true });
+  const userDetailRef = turoDb.collection('user_details').doc(uid);
+  batch.set(userDetailRef, userDetail, { merge: true });
+
+  const mentorData: any = {
+    user_id: uid,
+    id_type: data.idType || null,
+    id_file_name: data.idFileName || null,
+    id_file_url: idFileUrl || null,
+    selfie_url: selfieUrl || null,
+    verification_status: 'pending',
+    institutional_email: data.institutionalEmail || null,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+  if (credentialsOut.length > 0) {
+    mentorData.credentials = admin.firestore.FieldValue.arrayUnion(...credentialsOut);
+  }
+
+  if (achievementsOut.length > 0) {
+    mentorData.achievements = admin.firestore.FieldValue.arrayUnion(...achievementsOut);
+  }
+  const mentorRef = turoDb.collection('mentor_profile').doc(uid);
+  batch.set(mentorRef, mentorData, { merge: true });
+
+  try {
+    await batch.commit();
     console.log(`✅ Successfully saved profile for user: ${uid}`);
     return { success: true, message: "Profile saved successfully." };
   } catch (error) {

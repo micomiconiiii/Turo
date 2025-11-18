@@ -25,24 +25,6 @@ class AppNavigationScreen extends StatelessWidget {
                       ),
                       _buildScreenTitle(
                         context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
-                        screenTitle: "Sign Up - Mentee",
-                        onTapScreenTitle: () =>
-                            onTapScreenTitle(context, AppRoutes.splashScreen),
-                      ),
-                      _buildScreenTitle(
-                        context,
                         screenTitle: "Log in",
                         onTapScreenTitle: () =>
                             onTapScreenTitle(context, AppRoutes.loginScreen),
@@ -56,9 +38,8 @@ class AppNavigationScreen extends StatelessWidget {
                       _buildScreenTitle(
                         context,
                         screenTitle: "Sign Up- Mentor",
-                        onTapScreenTitle: () => Navigator.pushNamed(
-                            context, AppRoutes.mentorRegistrationScreen,
-                            arguments: 'dummy_uid'),
+                        onTapScreenTitle: () => onTapScreenTitle(
+                            context, AppRoutes.mentorRegistrationScreen),
                       ),
                       _buildScreenTitle(
                         context,
