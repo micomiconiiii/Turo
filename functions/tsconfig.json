@@ -10,7 +10,9 @@
     "strict": true,
     "target": "es2017",
     "skipLibCheck": true,
-    "types": []
+    "types": [
+      "mocha"
+    ]
   },
   "compileOnSave": true,
   "include": [

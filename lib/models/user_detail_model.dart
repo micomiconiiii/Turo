@@ -6,19 +6,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// This data is stored separately from public profile data for security and privacy.
 class UserDetailModel {
   final String userId;
-  final String email;
+  final String? email;
   final String fullName;
-  final Timestamp birthdate;
-  final String address;
-  final Timestamp createdAt;
+  final DateTime birthdate;
+  final String? address;
+  final DateTime createdAt;
 
   /// Creates a [UserDetailModel] with all required fields.
   UserDetailModel({
     required this.userId,
-    required this.email,
-    required this.fullName,
+    this.email,
+    required this.fullName, 
     required this.birthdate,
-    required this.address,
+    this.address,
     required this.createdAt,
   });
 
@@ -28,9 +28,9 @@ class UserDetailModel {
       'user_id': userId,
       'email': email,
       'full_name': fullName,
-      'birthdate': birthdate,
+      'birthdate': Timestamp.fromDate(birthdate),
       'address': address,
-      'created_at': createdAt,
+      'created_at': Timestamp.fromDate(createdAt),
     };
   }
 
@@ -40,11 +40,12 @@ class UserDetailModel {
   factory UserDetailModel.fromFirestore(Map<String, dynamic> data) {
     return UserDetailModel(
       userId: data['user_id'] as String,
-      email: data['email'] as String,
+      email: data['email'] as String?,
       fullName: data['full_name'] as String,
-      birthdate: data['birthdate'] as Timestamp,
-      address: data['address'] as String,
-      createdAt: data['created_at'] as Timestamp,
+      birthdate: (data['birthdate'] as Timestamp).toDate(),
+      address: data['address'] as String?,
+      createdAt: (data['created_at'] as Timestamp).toDate(),
     );
   }
 }
+

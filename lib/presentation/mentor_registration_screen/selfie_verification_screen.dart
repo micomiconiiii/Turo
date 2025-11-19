@@ -1,16 +1,33 @@
 // This screen is for selfie verification during mentor registration (STEP 4 out of 6).
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:turo/core/app_export.dart';
+import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/user_model.dart';
+import 'package:turo/presentation/mentor_registration_screen/credentials_achievements_screen.dart';
 import 'package:turo/widgets/custom_button.dart';
 import '../../services/auth_service.dart';
 
 class SelfieVerificationScreen extends StatefulWidget {
-  const SelfieVerificationScreen({super.key});
+  final UserModel user;
+  final UserDetailModel userDetail;
+  final String? idType;
+  final String? idFileName;
+  final Uint8List? idFileBytes;
+  final String? institutionalEmail; 
+
+  const SelfieVerificationScreen(
+  {super.key,
+  required this.user,
+  required this.userDetail,
+  this.institutionalEmail,
+  this.idType,
+  this.idFileName,
+  this.idFileBytes});
 
   @override
   _SelfieVerificationScreenState createState() =>
@@ -37,55 +54,20 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
       return;
     }
 
-    // Use AuthService to get current user
-    final user = _authService.currentUser;
-    if (user == null) {
-      return;
-    }
-
-    final fileName =
-        'selfie_verification/${DateTime.now().millisecondsSinceEpoch}';
-    final destination = 'users/${user.uid}/$fileName';
-
-    try {
-      final ref = FirebaseStorage.instance.ref(destination);
-      UploadTask uploadTask;
-      if (kIsWeb) {
-        uploadTask = ref.putData(await _pickedFile!.readAsBytes());
-      } else {
-        uploadTask = ref.putFile(File(_pickedFile!.path));
-      }
-      setState(() {
-        _uploadTask = uploadTask;
-      });
-
-      final snapshot = await _uploadTask!.whenComplete(() {});
-      final url = await snapshot.ref.getDownloadURL();
-
-      // Save the download URL to the user's profile in Firestore
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'selfieVerification': {
-          'downloadUrl': url,
-          'uploadedAt': FieldValue.serverTimestamp(),
-        },
-      }, SetOptions(merge: true));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selfie uploaded successfully!'),
-          backgroundColor: Colors.green,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CredentialsAchievementsScreen(
+          user: widget.user,
+          userDetail: widget.userDetail,
+          institutionalEmail: widget.institutionalEmail,
+          selfieFile: _pickedFile,
+          idType: widget.idType,
+          idFileName: widget.idFileName,
+          idFileBytes: widget.idFileBytes,
         ),
-      );
-
-      // Navigate to the next screen
-      Navigator.pushNamed(context, AppRoutes.credentialsAchievementsScreen);
-
-      setState(() {
-        _uploadTask = null;
-      });
-    } catch (e) {
-      print('Error uploading file: $e');
-    }
+      ),
+    );
   }
 
   @override

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import '../presentation/mentor_registration_screen/mentor_registration_screen.dart';
-import '../presentation/mentor_registration_screen/id_upload_screen.dart';
+import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/user_model.dart';
 import '../presentation/app_navigation_screen/app_navigation_screen.dart';
 import '../presentation/mentor_registration_screen/institutional_verification_screen.dart';
-import '../presentation/mentor_registration_screen/credentials_achievements_screen.dart';
-import '../presentation/mentor_registration_screen/selfie_verification_screen.dart';
-import '../presentation/mentor_registration_screen/otp_verification_screen.dart';
 import '../presentation/terms_and_conditions_screen/terms_and_conditions_screen.dart';
 import '../presentation/splash_screen/splash_screen.dart';
 import '../presentation/login_screen/login_screen.dart';
@@ -17,7 +14,11 @@ class AppRoutes {
   static const String idUploadScreen = '/id_upload_screen';
   static const String institutionalVerificationScreen =
       '/institutional_verification_screen';
+  static const String institutionalVerificationScreen =
+      '/institutional_verification_screen';
   static const String appNavigationScreen = '/app_navigation_screen';
+  static const String credentialsAchievementsScreen =
+      '/credentials_achievements_screen';
   static const String credentialsAchievementsScreen =
       '/credentials_achievements_screen';
   static const String selfieVerificationScreen = '/selfie_verification_screen';
@@ -30,25 +31,18 @@ class AppRoutes {
   static const String initialRoute = '/';
 
   static Map<String, WidgetBuilder> get routes => {
-    mentorRegistrationScreen: (context) {
-      final uid = ModalRoute.of(context)!.settings.arguments as String;
-      return MentorRegistrationScreen(uid: uid);
-    },
-    institutionalVerificationScreen: (context) =>
-        InstitutionalVerificationScreen(),
-    idUploadScreen: (context) => IdUploadScreen(),
-    appNavigationScreen: (context) => AppNavigationScreen(),
-    initialRoute: (context) => AppNavigationScreen(),
-    credentialsAchievementsScreen: (context) => CredentialsAchievementsScreen(),
-    selfieVerificationScreen: (context) => SelfieVerificationScreen(),
-    emailVerificationScreen: (context) {
-      final email = ModalRoute.of(context)!.settings.arguments as String;
-      return OtpVerificationScreen(email: email);
-    },
-    termsAndConditionsScreen: (context) => TermsAndConditionsScreen(),
-    splashScreen: (context) => SplashScreen(),
-    loginScreen: (context) => LoginScreen(),
-    userRegistrationScreen: (context) => UserRegistrationScreen(),
-    menteeOnboardingPage: (context) => MenteeOnboardingPage(),
-  };
+        mentorRegistrationScreen: (context) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final user = args['user'] as UserModel;
+        final userDetail = args['userDetail'] as UserDetailModel;
+        
+        return InstitutionalVerificationScreen(user: user, userDetail: userDetail);
+        },
+        appNavigationScreen: (context) => AppNavigationScreen(),
+        initialRoute: (context) => AppNavigationScreen(),
+        termsAndConditionsScreen: (context) => TermsAndConditionsScreen(),
+        splashScreen: (context) => SplashScreen(),
+        loginScreen: (context) => LoginScreen(),
+        userRegistrationScreen: (context) => UserRegistrationScreen(),
+      };
 }

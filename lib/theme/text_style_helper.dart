@@ -75,6 +75,7 @@ class TextStyleHelper {
         fontWeight: FontWeight.w600,
         fontFamily: 'Fustat',
       );
+  
   // Label Styles
   // Small text styles for labels and captions
 

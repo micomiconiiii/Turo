@@ -457,9 +457,9 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                               userId: uid,
                               email: email,
                               fullName: provider.fullName ?? '',
-                              birthdate: Timestamp.fromDate(birthdate),
+                              birthdate: birthdate,
                               address: fullAddress,
-                              createdAt: Timestamp.now(),
+                              createdAt: DateTime.now(),
                             );
 
                             final databaseService = DatabaseService();

@@ -8,7 +8,7 @@ import 'package:turo/models/mentee_profile_model.dart';
 class UserModel {
   final String userId;
   final String displayName;
-  final String bio;
+  final String? bio;
   final String? profilePictureUrl;
   final List<String> roles;
   final MenteeProfileModel? menteeProfile;
@@ -18,7 +18,7 @@ class UserModel {
   UserModel({
     required this.userId,
     required this.displayName,
-    required this.bio,
+    this.bio,
     this.profilePictureUrl,
     required this.roles,
     this.menteeProfile,
