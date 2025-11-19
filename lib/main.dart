@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:user_home_page/presentation/home/home_screen.dart';
+import 'package:user_home_page/presentation/home/mentor_home_screen.dart';
 import 'package:user_home_page/theme/app_theme.dart';
 
 /// Minimal Sizer stub (from your project)

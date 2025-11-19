@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
-// Assuming AppTheme.primary was used for section titles, we will overwrite it here
 import 'package:user_home_page/theme/app_theme.dart';
 
 // Define the custom color for the text: Black (Hex #3D3D3D)

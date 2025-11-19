@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
-import 'package:user_home_page/core/data/services/matching_data_service.dart';
-import 'package:user_home_page/presentation/home/widgets/profile_detail_card.dart';
+import 'package:user_home_page/core/data/services/mentor_matching_data_service.dart';
+import 'package:user_home_page/presentation/home/widgets/mentor_profile_detail_card.dart';
 import 'package:user_home_page/theme/app_theme.dart';
 
 // Define a reasonable height for the bottom navigation bar area
