@@ -43,66 +43,98 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   void _onVerifyPressed() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isVerifying = true);
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isVerifying = true);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    setState(() => _isVerifying = true);
+
+    try {
       final otp = _pinController.text.trim();
 
-      // The backend still generates a token/user, but we will decide
-      // what to do with it based on the flag below.
-      final result = await CustomFirebaseOtpService.verifyEmailOTP(widget.email, otp);
-      
+      // Verify OTP and sign in with custom token
+      final result = await CustomFirebaseOtpService.verifyEmailOTP(
+        widget.email,
+        otp,
+      );
+
       if (!mounted) return;
-      setState(() => _isVerifying = false);
 
-      // Assuming your service returns a Map or boolean. 
-      // Adjust 'result' check based on your actual service return type.
-      // If it returns boolean: if (result)
-      // If it returns Map: if (result['success'])
-      if (result == true) { 
-        
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Email verified successfully!'),
-          backgroundColor: Colors.green,
-        ));
+      if (result == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email verified successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-        // --- 2. LOGIC BRANCH ---
+        // Check if this is institutional verification flow
         if (widget.isInstitutional) {
-          // CASE A: Institutional Verification
-          // We do NOT go forward. We go BACK to the form, passing the verified email.
-          // We do NOT sign in with the token.
+          // CASE A: Institutional Verification (mentor flow continuation)
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => IdUploadScreen(
                 user: widget.user,
                 userDetail: widget.userDetail,
-                
-                // THIS IS THE KEY: Pass the verified email forward
-                institutionalEmail: widget.email, 
-              )
+                institutionalEmail: widget.email,
+              ),
             ),
           );
         } else {
-          // CASE B: Primary Registration Flow
-          // Your existing logic (Push forward)
-          Navigator.pushAndRemoveUntil(
+          // CASE B: Primary Registration Flow - Route based on role
+          // Get current user UID
+          final uid = _authService.currentUser?.uid;
+          if (uid == null) {
+            throw Exception('User not authenticated');
+          }
+
+          // Fetch user document to check role
+          final userDoc = await _databaseService.getUser(uid);
+          if (!userDoc.exists) {
+            throw Exception('User document not found');
+          }
+
+          final userData = userDoc.data() as Map<String, dynamic>;
+          final roles = List<String>.from(userData['roles'] ?? []);
+
+          if (!mounted) return;
+
+          // Route based on role
+          if (roles.contains('mentor')) {
+            // Navigate to mentor registration
+            Navigator.pushReplacementNamed(
               context,
-              MaterialPageRoute(
-                  builder: (context) => IdUploadScreen(
-                        user: widget.user,
-                        userDetail: widget.userDetail,
-                      )),
-              (route) => false);
+              AppRoutes.mentorRegistrationScreen,
+              arguments: {'user': widget.user, 'userDetail': widget.userDetail},
+            );
+          } else if (roles.contains('mentee')) {
+            // Navigate to mentee onboarding
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.menteeOnboardingPage,
+            );
+          } else {
+            throw Exception('Invalid user role');
+          }
         }
-        
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Invalid or expired OTP. Please try again.'),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid or expired OTP. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Verification failed: ${e.toString()}'),
           backgroundColor: Colors.red,
-        ));
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isVerifying = false);
       }
     }
   }
@@ -153,7 +185,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     : CustomButton(text: 'Verify', onPressed: _onVerifyPressed),
                 TextButton(
                   onPressed: () async {
-                    final success = await CustomFirebaseOtpService.resendEmailOTP(widget.email);
+                    final success =
+                        await CustomFirebaseOtpService.resendEmailOTP(
+                          widget.email,
+                        );
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
