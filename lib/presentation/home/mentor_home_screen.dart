@@ -1,28 +1,29 @@
-// file: home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
 import 'package:user_home_page/core/data/services/mentor_matching_data_service.dart';
 import 'package:user_home_page/presentation/home/widgets/mentor_profile_detail_card.dart';
 import 'package:user_home_page/theme/mentor_app_theme.dart';
+import 'package:user_home_page/presentation/home/widgets/bottom_nav_bar.dart';
 
-// Define a reasonable height for the bottom navigation bar area
-const double _kBottomNavBarHeight = 80.0;
+// Increased height reserved for navbar (Height 80 + Margin 34 + Buffer)
+const double _kBottomNavBarHeight = 130.0;
 
-class HomeScreen extends StatefulWidget {
-// ... (HomeScreen and _HomeScreenState definitions remain the same)
-  const HomeScreen({super.key});
+class MentorHomeScreen extends StatefulWidget {
+  const MentorHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<MentorHomeScreen> createState() => _MentorHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _MentorHomeScreenState extends State<MentorHomeScreen> {
   final MatchingDataService _matchingService = MatchingDataService();
   final List<SwipeItem> _swipeItems = [];
   late MatchEngine _matchEngine;
+
   List<MentorProfile> _mentors = [];
   bool _isLoading = true;
+  int _navIndex = 0;
 
   @override
   void initState() {
@@ -62,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // _buildHeader remains the same as previous response
+  /// ---------- UI BUILDERS ----------
 
   Widget _buildHeader(MentorProfile mentor) {
     return ClipRRect(
@@ -106,10 +107,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppTheme.chipGreen,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(e,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600)),
+                      child: Text(
+                        e,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
                     );
                   }).toList(),
                 ),
@@ -121,27 +123,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // FIX: Use ListView to make the entire card scrollable.
   Widget _buildCard(MentorProfile mentor) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       clipBehavior: Clip.antiAlias,
       child: ListView(
-        // IMPORTANT: No padding here. The padding for the bottom bar is handled
-        // by the parent Positioned widget in the build method.
         padding: EdgeInsets.zero,
         children: [
-          // Header (Image, Name, Expertise)
           _buildHeader(mentor),
-          // Details
           ProfileDetailCard(mentor: mentor),
         ],
       ),
     );
   }
-
-  // _buildAppBar remains the same as previous response
 
   Widget _buildAppBar() {
     return Positioned(
@@ -155,16 +150,16 @@ class _HomeScreenState extends State<HomeScreen> {
           right: 16,
           bottom: 10,
         ),
-        color: Colors.transparent,
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'TURO',
               style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold),
+                color: Colors.black,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Row(
               children: [
@@ -179,39 +174,37 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// ---------- MAIN BUILD ----------
+
   @override
   Widget build(BuildContext context) {
     final double headerHeight = MediaQuery.of(context).padding.top + 50;
 
-    // We will assume the full screen height (MediaQuerry.size.height) and subtract the bottom bar height
-    // Or, more simply, use the 'bottom' property of Positioned.fill.
-
     return Scaffold(
+      backgroundColor: AppTheme.white,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _mentors.isEmpty
               ? const Center(child: Text('No more mentors available.'))
               : Stack(
                   children: [
-                    // 1. Swipe Cards - Define fixed top and bottom boundaries.
+                    /// Swipe card area
                     Positioned.fill(
                       top: headerHeight,
-                      // FIX HERE: Set a fixed bottom padding to reserve space for the bottom nav bar.
-                      // The cards will now end here instead of filling the whole screen.
                       bottom: _kBottomNavBarHeight,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: SwipeCards(
                           matchEngine: _matchEngine,
-                          itemBuilder: (BuildContext context, int index) {
-                            final mentor = _mentors[index];
-                            return _buildCard(mentor);
+                          itemBuilder: (context, index) {
+                            return _buildCard(_mentors[index]);
                           },
                           onStackFinished: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text(
-                                      'You’ve reached the end of the list!')),
+                                content:
+                                    Text('You’ve reached the end of the list!'),
+                              ),
                             );
                           },
                           upSwipeAllowed: false,
@@ -219,24 +212,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    // 2. The App Bar (layered on top)
+
+                    /// Top AppBar
                     _buildAppBar(),
 
-                    // 3. Placeholder for Bottom Navigation Bar (Optional, for visual alignment)
-                    // You will replace this with your actual BottomNavigationBar later.
+                    /// Floating Bottom Navbar
                     Positioned(
-                      bottom: 0,
                       left: 0,
                       right: 0,
-                      height: _kBottomNavBarHeight,
-                      child: Container(
-                        color: Colors
-                            .white, // Use your actual nav bar background color
-                        child: Center(
-                          child: Text(
-                              'Bottom Nav Bar Area (${_kBottomNavBarHeight.toInt()}px)',
-                              style: const TextStyle(color: Colors.grey)),
-                        ),
+                      bottom: 0,
+                      child: TuroBottomNavBar(
+                        selectedIndex: _navIndex,
+                        onTap: (i) {
+                          setState(() => _navIndex = i);
+                        },
                       ),
                     ),
                   ],

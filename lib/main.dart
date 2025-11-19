@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
             );
           },
 
-          home: const HomeScreen(),
+          home: const MentorHomeScreen(),
 
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
