@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:user_home_page/presentation/home/mentor_home_screen.dart';
-import 'package:user_home_page/theme/app_theme.dart';
+import 'package:user_home_page/theme/mentor_app_theme.dart';
 
 /// Minimal Sizer stub (from your project)
 class Sizer extends StatelessWidget {

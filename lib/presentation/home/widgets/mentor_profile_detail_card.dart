@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
-import 'package:user_home_page/theme/app_theme.dart';
+import 'package:user_home_page/theme/mentor_app_theme.dart';
 
 // Define the custom color for the text: Black (Hex #3D3D3D)
 const Color _kDarkGreyText = Color(0xFF3D3D3D);
