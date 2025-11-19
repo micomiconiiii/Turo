@@ -10,10 +10,7 @@ import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
 import 'otp_verification_screen.dart'; // Standardized import
 
-enum ButtonVariant {
-  fillPrimary,
-  outlineBlack,
-}
+enum ButtonVariant { fillPrimary, outlineBlack }
 
 class InstitutionalVerificationScreen extends StatefulWidget {
   final UserModel user;
@@ -30,9 +27,12 @@ class InstitutionalVerificationScreen extends StatefulWidget {
   @override
   State<InstitutionalVerificationScreen> createState() =>
       _InstitutionalVerificationScreenState();
+  State<InstitutionalVerificationScreen> createState() =>
+      _InstitutionalVerificationScreenState();
 }
 
-class _InstitutionalVerificationScreenState extends State<InstitutionalVerificationScreen> {
+class _InstitutionalVerificationScreenState
+    extends State<InstitutionalVerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _institutionController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -48,12 +48,12 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
-      
+
       try {
         // 2. Request OTP
         final success = await CustomFirebaseOtpService.requestEmailOTP(institutionalEmailInput);
         Navigator.pop(context);
-        
+
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -132,7 +132,8 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
             children: [
               Text(
                 'TURO',
-                style: TextStyleHelper.instance.headline32SemiBoldFustat.copyWith(height: 1.44),
+                style: TextStyleHelper.instance.headline32SemiBoldFustat
+                    .copyWith(height: 1.44),
               ),
               SizedBox(height: 8.h),
               Row(
@@ -140,11 +141,13 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                 children: [
                   Text(
                     'Mentor Registration',
-                    style: TextStyleHelper.instance.title20SemiBoldFustat.copyWith(color: appTheme.gray_800, height: 1.45),
+                    style: TextStyleHelper.instance.title20SemiBoldFustat
+                        .copyWith(color: appTheme.gray_800, height: 1.45),
                   ),
                   Text(
                     'Step 2 out of 6',
-                    style: TextStyleHelper.instance.body12RegularFustat.copyWith(height: 1.5),
+                    style: TextStyleHelper.instance.body12RegularFustat
+                        .copyWith(height: 1.5),
                   ),
                 ],
               ),
@@ -190,7 +193,8 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
               Center(
                 child: Text(
                   'Verify your Institution',
-                  style: TextStyleHelper.instance.title20SemiBoldFustat.copyWith(color: appTheme.gray_800, height: 1.45),
+                  style: TextStyleHelper.instance.title20SemiBoldFustat
+                      .copyWith(color: appTheme.gray_800, height: 1.45),
                 ),
               ),
               Center(
@@ -229,8 +233,12 @@ class _InstitutionalVerificationScreenState extends State<InstitutionalVerificat
                         }
                         final domain = value.split('@').last.toLowerCase();
                         final personalDomains = [
-                          'gmail.com', 'yahoo.com', 'hotmail.com', 
-                          'outlook.com', 'icloud.com', 'aol.com'
+                          'gmail.com',
+                          'yahoo.com',
+                          'hotmail.com',
+                          'outlook.com',
+                          'icloud.com',
+                          'aol.com',
                         ];
                         if (personalDomains.contains(domain)) {
                           return 'Please use your institutional email, not a personal email address';

@@ -93,6 +93,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       ),
     );
   }
+  }
 
   Widget _buildTabBar(BuildContext context) {
     return Row(
@@ -274,6 +275,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     }
     return null;
   }
+  }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -283,6 +285,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       return 'Password must be at least 6 characters';
     }
     return null;
+  }
   }
 
   String? _validateConfirmPassword(String? value) {

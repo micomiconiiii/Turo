@@ -31,9 +31,11 @@ class AppNavigationScreen extends StatelessWidget {
                       ),
                       _buildScreenTitle(
                         context,
-                        screenTitle: "Sign Up - Mentee",
+                        screenTitle: "User registration",
                         onTapScreenTitle: () => onTapScreenTitle(
-                            context, AppRoutes.userRegistrationScreen),
+                          context,
+                          AppRoutes.userRegistrationScreen,
+                        ),
                       ),
                       _buildScreenTitle(
                         context,
@@ -45,13 +47,15 @@ class AppNavigationScreen extends StatelessWidget {
                         context,
                         screenTitle: "Terms and Conditions",
                         onTapScreenTitle: () => onTapScreenTitle(
-                            context, AppRoutes.termsAndConditionsScreen),
+                          context,
+                          AppRoutes.termsAndConditionsScreen,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -80,13 +84,11 @@ class AppNavigationScreen extends StatelessWidget {
                 Text(
                   screenTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyleHelper.instance.title20RegularRoboto
-                      .copyWith(color: Color(0XFF000000)),
+                  style: TextStyleHelper.instance.title20RegularRoboto.copyWith(
+                    color: Color(0XFF000000),
+                  ),
                 ),
-                Icon(
-                  Icons.arrow_forward,
-                  color: Color(0XFF343330),
-                )
+                Icon(Icons.arrow_forward, color: Color(0XFF343330)),
               ],
             ),
             SizedBox(height: 10.h),

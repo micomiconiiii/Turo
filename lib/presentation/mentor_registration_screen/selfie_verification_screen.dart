@@ -10,6 +10,7 @@ import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
 import 'package:turo/presentation/mentor_registration_screen/credentials_achievements_screen.dart';
 import 'package:turo/widgets/custom_button.dart';
+import '../../services/auth_service.dart';
 
 class SelfieVerificationScreen extends StatefulWidget {
   final UserModel user;
@@ -34,6 +35,7 @@ class SelfieVerificationScreen extends StatefulWidget {
 }
 
 class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
+  final AuthService _authService = AuthService();
   XFile? _pickedFile;
   UploadTask? _uploadTask;
 
@@ -123,7 +125,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                   SizedBox(width: 2.h),
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
-                  
+
                   _buildProgressSegment(filled: true),
                   SizedBox(width: 2.h),
                   Expanded(
@@ -158,8 +160,10 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
               Center(
                 child: Text(
                   'Take a selfie to verify your identity',
-                  style: TextStyleHelper.instance.body12RegularFustat
-                      .copyWith(color: appTheme.gray_800, height: 1.5),
+                  style: TextStyleHelper.instance.body12RegularFustat.copyWith(
+                    color: appTheme.gray_800,
+                    height: 1.5,
+                  ),
                 ),
               ),
 
@@ -168,14 +172,8 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
               if (_pickedFile != null)
                 Center(
                   child: kIsWeb
-                      ? Image.network(
-                          _pickedFile!.path,
-                          height: 200,
-                        )
-                      : Image.file(
-                          File(_pickedFile!.path),
-                          height: 200,
-                        ),
+                      ? Image.network(_pickedFile!.path, height: 200)
+                      : Image.file(File(_pickedFile!.path), height: 200),
                 ),
 
               SizedBox(height: 20.h),
@@ -194,7 +192,8 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       final progress =
-                          snapshot.data!.bytesTransferred / snapshot.data!.totalBytes;
+                          snapshot.data!.bytesTransferred /
+                          snapshot.data!.totalBytes;
                       return Column(
                         children: [
                           SizedBox(height: 20.h),

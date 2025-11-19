@@ -4,6 +4,8 @@ import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
 import '../../core/app_export.dart';
 import '../../services/custom_firebase_otp_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 import '../../widgets/custom_button.dart';
 import './id_upload_screen.dart';
 
@@ -31,6 +33,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _pinController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isVerifying = false;
+  final AuthService _authService = AuthService();
+  final DatabaseService _databaseService = DatabaseService();
 
   @override
   void dispose() {
@@ -39,6 +43,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   void _onVerifyPressed() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isVerifying = true);
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isVerifying = true);
 
@@ -116,7 +122,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               children: [
                 SizedBox(height: 50.h),
                 Text(
-                  'OTP Verification',
+                  'Email Verification',
                   style: TextStyleHelper.instance.title20SemiBoldFustat
                       .copyWith(color: appTheme.gray_800, height: 1.45),
                 ),
@@ -124,8 +130,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 Text(
                   'Enter the OTP sent to ${widget.email}',
                   textAlign: TextAlign.center,
-                  style: TextStyleHelper.instance.body12RegularFustat
-                      .copyWith(color: appTheme.gray_800, height: 1.5),
+                  style: TextStyleHelper.instance.body12RegularFustat.copyWith(
+                    color: appTheme.gray_800,
+                    height: 1.5,
+                  ),
                 ),
                 SizedBox(height: 32.h),
                 Pinput(
@@ -142,19 +150,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 SizedBox(height: 32.h),
                 _isVerifying
                     ? const CircularProgressIndicator()
-                    : CustomButton(
-                        text: 'Verify',
-                        onPressed: _onVerifyPressed,
-                      ),
+                    : CustomButton(text: 'Verify', onPressed: _onVerifyPressed),
                 TextButton(
                   onPressed: () async {
                     final success = await CustomFirebaseOtpService.resendEmailOTP(widget.email);
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(success
-                            ? 'OTP resent successfully'
-                            : 'Failed to resend OTP'),
+                        content: Text(
+                          success
+                              ? 'OTP resent successfully'
+                              : 'Failed to resend OTP',
+                        ),
                         backgroundColor: success ? Colors.green : Colors.red,
                       ),
                     );
