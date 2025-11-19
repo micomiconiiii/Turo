@@ -3,9 +3,9 @@ import * as admin from "firebase-admin";
 import * as nodemailer from "nodemailer";
 import {defineString} from "firebase-functions/params";
 
-// Define email and password as environment variables
-const emailProvider = defineString("EMAIL");
-const passwordProvider = defineString("PASSWORD");
+// Define email and password as environment variables (lazy-loaded)
+const emailProvider = defineString("EMAIL", {default: ""});
+const passwordProvider = defineString("PASSWORD", {default: ""});
 
 // Initialize Firebase Admin SDK and Firestore
 admin.initializeApp();
@@ -277,3 +277,7 @@ export const saveUserProfile = functions.https.onCall(async (request) => {
     );
   }
 });
+
+// ========== Admin Module Functions ==========
+// Export all admin-related Cloud Functions
+export {onUserVerified, resetDailyStats} from "./admin/dashboard_stats";
