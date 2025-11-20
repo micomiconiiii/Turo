@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
 import '../presentation/app_navigation_screen/app_navigation_screen.dart';
@@ -9,6 +10,7 @@ import '../presentation/splash_screen/splash_screen.dart';
 import '../presentation/login_screen/login_screen.dart';
 import '../presentation/user_registration_screen/user_registration_screen.dart';
 import '../presentation/mentee_onboarding/pages/mentee_onboarding_page.dart';
+import '../presentation/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
 class AppRoutes {
   static const String mentorRegistrationScreen = '/mentor_registration_screen';
@@ -51,7 +53,10 @@ class AppRoutes {
         role: args['role'] as String?,
       );
     },
-    menteeOnboardingPage: (context) => const MenteeOnboardingPage(),
+    menteeOnboardingPage: (context) => ChangeNotifierProvider(
+      create: (_) => MenteeOnboardingProvider(),
+      child: const MenteeOnboardingPage(),
+    ),
     appNavigationScreen: (context) => AppNavigationScreen(),
     initialRoute: (context) => AppNavigationScreen(),
     termsAndConditionsScreen: (context) => TermsAndConditionsScreen(),

@@ -68,9 +68,17 @@ class _MenteeOnboardingPageState extends State<MenteeOnboardingPage> {
     if (_currentIndex < _steps.length - 1) {
       setState(() => _currentIndex += 1);
     } else {
+      // Pass the provider to the new route
+      final provider = Provider.of<MenteeOnboardingProvider>(
+        context,
+        listen: false,
+      );
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => const confirmation_step.ConfirmationStep(),
+          builder: (context) => ChangeNotifierProvider.value(
+            value: provider,
+            child: const confirmation_step.ConfirmationStep(),
+          ),
         ),
       );
     }
