@@ -27,8 +27,6 @@ class InstitutionalVerificationScreen extends StatefulWidget {
   @override
   State<InstitutionalVerificationScreen> createState() =>
       _InstitutionalVerificationScreenState();
-  State<InstitutionalVerificationScreen> createState() =>
-      _InstitutionalVerificationScreenState();
 }
 
 class _InstitutionalVerificationScreenState
@@ -261,18 +259,22 @@ class _InstitutionalVerificationScreenState
                 ),
               ),
               SizedBox(height: 32.h),
-              CustomButton(
+              Center(
+              child: CustomButton(
                 text: 'Send OTP',
                 onPressed: _onSendOTPPressed,
                 backgroundColor: appTheme.blue_gray_700,
                 textColor: Colors.white,
               ),
+              ), 
               SizedBox(height: 16.h),
-              CustomButton(
+              Center(
+              child: CustomButton(
                 text: 'Skip',
                 onPressed: _onSkipPressed,
                 backgroundColor: Colors.transparent,
                 textColor: appTheme.blue_gray_700,
+              ),
               ),
             ],
           ),

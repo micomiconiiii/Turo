@@ -12,16 +12,12 @@ import '../presentation/mentee_onboarding/pages/mentee_onboarding_page.dart';
 class AppRoutes {
   static const String mentorRegistrationScreen = '/mentor_registration_screen';
   static const String idUploadScreen = '/id_upload_screen';
-  static const String institutionalVerificationScreen =
-      '/institutional_verification_screen';
-  static const String institutionalVerificationScreen =
+ static const String institutionalVerificationScreen =
       '/institutional_verification_screen';
   static const String appNavigationScreen = '/app_navigation_screen';
   static const String credentialsAchievementsScreen =
       '/credentials_achievements_screen';
-  static const String credentialsAchievementsScreen =
-      '/credentials_achievements_screen';
-  static const String selfieVerificationScreen = '/selfie_verification_screen';
+   static const String selfieVerificationScreen = '/selfie_verification_screen';
   static const String emailVerificationScreen = '/email_verification_screen';
   static const String termsAndConditionsScreen = '/terms_and_conditions_screen';
   static const String splashScreen = '/splash_screen';
