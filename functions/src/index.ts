@@ -186,15 +186,20 @@ export const verifyEmailOTP = functions.https.onCall(async (request) => {
     // If valid, delete the OTP so it can't be reused
     await otpDocRef.delete();
 
-    // Get an existing user or create a new one
+    // Get an existing user or create a new one (passwordless initially)
+    // The client will create Firestore documents after signing in with the custom token
     let userRecord;
     try {
         userRecord = await auth.getUserByEmail(email);
     } catch (e) {
         const error = e as { code: string };
         if (error.code === "auth/user-not-found") {
-            // Create a new user if one doesn't exist
-            userRecord = await auth.createUser({ email: email });
+            // Create a passwordless Firebase Auth user
+            // Password can be set later via updatePassword or reauthentication
+            userRecord = await auth.createUser({ 
+                email: email,
+                emailVerified: true // Mark as verified since OTP was confirmed
+            });
         } else {
             // For other errors, rethrow
             throw new functions.https.HttpsError("internal", "Error retrieving user account.");

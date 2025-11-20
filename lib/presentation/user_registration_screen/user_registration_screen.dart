@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
-import '../../widgets/custom_image_view.dart';
-import 'package:turo/models/user_detail_model.dart';
-import 'package:turo/models/user_model.dart';
-import 'package:turo/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// Deferred signup: we no longer create the auth user or Firestore docs here.
+// User creation happens after OTP verification.
 import 'package:turo/services/custom_firebase_otp_service.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
@@ -22,7 +21,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   // Tab state
@@ -37,13 +35,17 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           children: [
             SizedBox(height: 84.h),
             // Logo section
-            SizedBox(
+            Container(
               width: 164.h,
               height: 206.h,
-              child: CustomImageView(
-                imagePath: ImageConstant.imgGroup222WhiteA700,
-                height: 206.h,
-                width: 164.h,
+              decoration: BoxDecoration(
+                color: appTheme.blue_gray_700,
+                borderRadius: BorderRadius.circular(20.h),
+              ),
+              child: Icon(
+                Icons.school_outlined,
+                size: 120.h,
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 1.h),
@@ -172,7 +174,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           CustomEditText(
             controller: _emailController,
             placeholder: 'Email',
-            prefixIconPath: ImageConstant.imgEmail1572,
+            prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: _validateEmail,
           ),
@@ -181,7 +183,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           CustomEditText(
             controller: _passwordController,
             placeholder: 'Password',
-            prefixIconPath: ImageConstant.imgVectorGray80018x20,
+            prefixIcon: Icons.lock_outlined,
             isPassword: true,
             validator: _validatePassword,
           ),
@@ -190,7 +192,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           CustomEditText(
             controller: _confirmPasswordController,
             placeholder: 'Confirm Password',
-            prefixIconPath: ImageConstant.imgVectorGray80018x20,
+            prefixIcon: Icons.lock_outlined,
             isPassword: true,
             validator: _validateConfirmPassword,
           ),
@@ -289,64 +291,44 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
   Future<void> _onSignUpPressed(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
-      final String role = _isMentor ? 'mentor' : 'mentee';
+      final role = _isMentor ? 'mentor' : 'mentee';
 
-      // 1. Create Firebase Auth user + Firestore documents (atomic)
-      final user = await _authService.signUpWithEmailPassword(
+      // Ensure email not already registered
+      final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(
         email,
-        password,
-        '', // fullName will be filled in onboarding
-        role,
       );
-
-      if (user == null) {
-        throw Exception('Failed to create user account');
+      if (methods.isNotEmpty) {
+        throw Exception('Email already in use');
       }
 
-      final uid = user.uid;
-
-      // 2. Send OTP
       final otpSent = await CustomFirebaseOtpService.requestEmailOTP(email);
-      if (!otpSent) {
-        throw Exception('Failed to send OTP');
-      }
-
+      if (!otpSent) throw Exception('Failed to send OTP');
       if (!mounted) return;
 
-      // 3. Create models to pass to OTP screen
-      final newUser = UserModel(
-        userId: uid,
-        displayName: email.split('@')[0],
-        roles: [role],
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP sent! Please verify to complete registration.'),
+          backgroundColor: Color(0xFF10403B),
+          duration: Duration(seconds: 2),
+        ),
       );
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
 
-      final newUserDetail = UserDetailModel(
-        userId: uid,
-        email: email,
-        fullName: '', // Will be filled in onboarding
-        birthdate: DateTime.now(),
-        address: '',
-        createdAt: DateTime.now(),
-      );
-
-      // 4. Navigate to OTP verification for both mentor and mentee
       Navigator.of(context).pushNamed(
         AppRoutes.emailVerificationScreen,
         arguments: {
           'email': email,
-          'user': newUser,
-          'userDetail': newUserDetail,
+          'password': password,
+          'role': role,
           'isInstitutional': false,
         },
       );
 
-      // Clear controllers
       _emailController.clear();
       _passwordController.clear();
       _confirmPasswordController.clear();
@@ -359,9 +341,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

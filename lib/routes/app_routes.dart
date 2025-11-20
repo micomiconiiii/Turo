@@ -43,10 +43,12 @@ class AppRoutes {
           ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
       return OtpVerificationScreen(
         email: args['email'] as String,
-        user: args['user'] as UserModel,
-        userDetail: args['userDetail'] as UserDetailModel,
+        user: args['user'] as UserModel?,
+        userDetail: args['userDetail'] as UserDetailModel?,
         isInstitutional: args['isInstitutional'] as bool? ?? false,
         institutionalEmail: args['institutionalEmail'] as String?,
+        password: args['password'] as String?,
+        role: args['role'] as String?,
       );
     },
     menteeOnboardingPage: (context) => const MenteeOnboardingPage(),

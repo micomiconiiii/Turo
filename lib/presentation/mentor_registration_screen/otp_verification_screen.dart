@@ -11,18 +11,22 @@ import './id_upload_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
-  final UserModel user;
-  final UserDetailModel userDetail;
+  final UserModel? user; // Optional in deferred signup flow
+  final UserDetailModel? userDetail; // Optional in deferred signup flow
   final String? institutionalEmail;
-  final bool isInstitutional; // <--- 1. Add this flag
+  final bool isInstitutional; // true when verifying institutional email
+  final String? password; // Provided only in deferred signup path
+  final String? role; // Provided only in deferred signup path
 
   const OtpVerificationScreen({
     super.key,
     required this.email,
-    required this.user,
-    required this.userDetail,
+    this.user,
+    this.userDetail,
     this.institutionalEmail,
-    this.isInstitutional = false, // Default to false (Normal flow)
+    this.isInstitutional = false,
+    this.password,
+    this.role,
   });
 
   @override
@@ -68,52 +72,82 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
         // Check if this is institutional verification flow
         if (widget.isInstitutional) {
-          // CASE A: Institutional Verification (mentor flow continuation)
+          // Institutional mentor email verification continues to ID upload
+          if (widget.user == null || widget.userDetail == null) {
+            throw Exception('Missing user data for institutional flow');
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => IdUploadScreen(
-                user: widget.user,
-                userDetail: widget.userDetail,
+                user: widget.user!,
+                userDetail: widget.userDetail!,
                 institutionalEmail: widget.email,
               ),
             ),
           );
         } else {
-          // CASE B: Primary Registration Flow - Route based on role
-          // Get current user UID
+          // Deferred signup: User is already authenticated via custom token
+          // Now create Firestore documents if they don't exist
           final uid = _authService.currentUser?.uid;
-          if (uid == null) {
-            throw Exception('User not authenticated');
-          }
+          if (uid == null) throw Exception('User not authenticated after OTP');
 
-          // Fetch user document to check role
           final userDoc = await _databaseService.getUser(uid);
-          if (!userDoc.exists) {
-            throw Exception('User document not found');
+
+          // If user document doesn't exist, create initial documents
+          if (!userDoc.exists && widget.role != null) {
+            await _databaseService.createInitialUser(
+              uid,
+              widget.email,
+              widget.role!,
+            );
           }
 
-          final userData = userDoc.data() as Map<String, dynamic>;
-          final roles = List<String>.from(userData['roles'] ?? []);
+          // Re-fetch to get the user data
+          final refreshedUserDoc = await _databaseService.getUser(uid);
+          if (!refreshedUserDoc.exists)
+            throw Exception('User document missing after creation');
+          final data = refreshedUserDoc.data() as Map<String, dynamic>;
+          final roles = List<String>.from(data['roles'] ?? []);
 
+          // Prepare user models if absent (deferred mentor path)
+          final preparedUser =
+              widget.user ??
+              UserModel(
+                userId: uid,
+                displayName: widget.email.split('@').first,
+                roles: roles,
+              );
+          final preparedUserDetail =
+              widget.userDetail ??
+              UserDetailModel(
+                userId: uid,
+                email: widget.email,
+                fullName: '',
+                birthdate: DateTime.now(),
+                address: '',
+                createdAt: DateTime.now(),
+              );
           if (!mounted) return;
-
-          // Route based on role
           if (roles.contains('mentor')) {
-            // Navigate to mentor registration
             Navigator.pushReplacementNamed(
               context,
               AppRoutes.mentorRegistrationScreen,
-              arguments: {'user': widget.user, 'userDetail': widget.userDetail},
+              arguments: {
+                'user': preparedUser,
+                'userDetail': preparedUserDetail,
+              },
             );
           } else if (roles.contains('mentee')) {
-            // Navigate to mentee onboarding
             Navigator.pushReplacementNamed(
               context,
               AppRoutes.menteeOnboardingPage,
             );
           } else {
-            throw Exception('Invalid user role');
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.appNavigationScreen,
+            );
           }
         }
       } else {
