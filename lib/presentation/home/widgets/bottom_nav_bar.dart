@@ -1,3 +1,4 @@
+// For Mentor Home Page
 import 'package:flutter/material.dart';
 import 'package:user_home_page/theme/mentor_app_theme.dart';
 
@@ -14,20 +15,17 @@ class TuroBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Floating Navbar Styling
       height: 80,
-      margin: const EdgeInsets.only(
-          left: 24, right: 24, bottom: 34), // Pushes it off the edges
+      margin: const EdgeInsets.only(left: 24, right: 24, bottom: 34),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primary, // Dark green
-        borderRadius: BorderRadius.circular(40), // Fully rounded pill shape
+        color: AppTheme.primary,
+        borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            // FIXED: Updated to use .withValues(alpha: ...)
             color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
-            offset: const Offset(0, 5), // Drop shadow for depth
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -55,7 +53,6 @@ class TuroBottomNavBar extends StatelessWidget {
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        // Tighter padding to match the Figma design's active state circle
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,

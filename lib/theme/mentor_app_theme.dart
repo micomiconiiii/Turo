@@ -1,7 +1,7 @@
+// For details on the theme of Mentor Home Page
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // 🎨 Brand Colors
   static const Color primary = Color(0xFF104038);
   static const Color secondary = Color(0xFF3D3D3D);
   static const Color grey = Color(0xFFD9D9D9);
@@ -11,9 +11,6 @@ class AppTheme {
   static const Color black = Color(0xFF3D3D3D);
   static const Color chipGreen = Color(0xFF2C6A64);
 
-  // --- Fustat Styles ---
-
-  // 1. Main Header ("TURO")
   static const TextStyle fustatHeader = TextStyle(
     fontFamily: 'Fustat',
     fontWeight: FontWeight.w800,
@@ -21,46 +18,52 @@ class AppTheme {
     color: black,
   );
 
-  // 2. Body Chips (Goals, Looking For) -> Fustat 12
-  // ADDED THIS SECTION
+  static const TextStyle fustatSubHeader = TextStyle(
+    fontFamily: 'Fustat',
+    fontWeight: FontWeight.w700,
+    fontSize: 20,
+    color: black,
+  );
+
+  static const TextStyle body1 = TextStyle(
+    fontFamily: 'Fustat',
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
+    color: black,
+  );
+
   static const TextStyle body3 = TextStyle(
     fontFamily: 'Fustat',
-    fontWeight: FontWeight.w400, // Regular
+    fontWeight: FontWeight.w400,
     fontSize: 12,
     color: black,
   );
 
-  // --- Montserrat Styles ---
-
-  // 3. Name on Image
   static const TextStyle montserratName = TextStyle(
     fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w600, // SemiBold
+    fontWeight: FontWeight.w600,
     fontSize: 32,
     color: Colors.white,
     letterSpacing: 1.2,
   );
 
-  // 4. Section Titles (About, Goals, etc.) -> SemiBold 20
   static const TextStyle montserratSectionTitle = TextStyle(
     fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w600, // SemiBold
+    fontWeight: FontWeight.w600,
     fontSize: 20,
     color: black,
   );
 
-  // 5. Details (Bio, Notes, Budget Value) -> Regular 15
   static const TextStyle montserratBody = TextStyle(
     fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w400, // Regular
+    fontWeight: FontWeight.w400,
     fontSize: 15,
     color: secondary,
   );
 
-  // 6. Header Chip Text (Image Overlay) -> Regular 12
   static const TextStyle montserratChip = TextStyle(
     fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w400, // Regular
+    fontWeight: FontWeight.w400,
     fontSize: 12,
     color: white,
   );
@@ -68,7 +71,7 @@ class AppTheme {
   static ThemeData get themeData {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Montserrat', // Set Default Font
+      fontFamily: 'Fustat',
       scaffoldBackgroundColor: white,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
@@ -84,10 +87,9 @@ class AppTheme {
       textTheme: const TextTheme(
         headlineLarge: fustatHeader,
         titleMedium: montserratSectionTitle,
-        bodyLarge: montserratBody,
+        bodyLarge: body1,
         bodyMedium: montserratBody,
-        // You can map bodySmall to montserratChip or body3 depending on preference
-        bodySmall: montserratChip,
+        bodySmall: body3,
       ),
     );
   }

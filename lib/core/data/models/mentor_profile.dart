@@ -1,6 +1,6 @@
+//For the backend data model of mentor Profile
 import 'package:flutter/material.dart';
 
-/// Central color definitions shared across the app
 class AppColors {
   static const Color primaryBlue = Color(0xFF1E3A8A);
   static const Color darkGray = Color(0xFF4B5563);
@@ -9,7 +9,6 @@ class AppColors {
   static const Color deepGreen = Color(0xFF047857);
 }
 
-/// Model representing a mentor’s data
 class MentorProfile {
   final String id;
   final String name;

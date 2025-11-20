@@ -1,3 +1,4 @@
+//For backend data model of Mentee Profile
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MenteeProfile {
@@ -6,19 +7,15 @@ class MenteeProfile {
   final DateTime joinDate;
   final String profileImageUrl;
 
-  // --- Fields from your Figma Design ---
-  final String bio; // The "About" section
-  final List<String>
-      skillsToLearn; // The tags on top of the image (UI/UX, Frontend)
-  final List<String>
-      targetMentors; // "I'm looking for" (Software Engineer, IT Mentor)
-  final String budget; // "My budget is" (PHP200/hr)
-  final List<String> goals; // "Goals" (Career Development, Long-term)
-  final String notes; // "Notes" section
+  final String bio;
+  final List<String> skillsToLearn;
+  final List<String> targetMentors;
+  final String budget;
+  final List<String> goals;
+  final String notes;
 
-  // --- Metadata ---
-  final String currentRole; // Useful for filtering (e.g. "Student")
-  final String status; // e.g. 'seeking_mentor'
+  final String currentRole;
+  final String status;
 
   const MenteeProfile({
     required this.id,
@@ -35,7 +32,6 @@ class MenteeProfile {
     required this.status,
   });
 
-  // --- Factory: Initial/Empty ---
   factory MenteeProfile.initial(String userId) {
     return MenteeProfile(
       id: userId,
@@ -53,7 +49,6 @@ class MenteeProfile {
     );
   }
 
-  // --- Serialization: To Firestore ---
   Map<String, dynamic> toFirestore() {
     return {
       'fullName': fullName,
@@ -70,7 +65,6 @@ class MenteeProfile {
     };
   }
 
-  // --- Deserialization: From Firestore ---
   factory MenteeProfile.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data();
@@ -92,6 +86,3 @@ class MenteeProfile {
     );
   }
 }
-
-  // Update factory initial and fromFirestore accordingly...
-  // (I can provide the full file if you need it, but these are the key fields)

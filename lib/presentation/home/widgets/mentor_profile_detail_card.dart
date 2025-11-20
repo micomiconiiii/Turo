@@ -1,16 +1,14 @@
+// For Mentor Home Page
 import 'package:flutter/material.dart';
 import 'package:user_home_page/core/data/models/mentor_profile.dart';
 import 'package:user_home_page/theme/mentor_app_theme.dart';
 
-// Define the custom color for the text: Black (Hex #3D3D3D)
 const Color _kDarkGreyText = Color(0xFF3D3D3D);
 
 class ProfileDetailCard extends StatelessWidget {
   final MentorProfile mentor;
 
   const ProfileDetailCard({super.key, required this.mentor});
-
-  // --- Helper Widgets ---
 
   Widget _buildChip(String text) {
     return Container(
@@ -39,7 +37,6 @@ class ProfileDetailCard extends StatelessWidget {
           fontFamily: 'Montserrat',
           fontWeight: FontWeight.w600,
           fontSize: 20,
-          // FIX: Updated color to Black (3D3D3D)
           color: _kDarkGreyText,
         ),
       ),
@@ -60,8 +57,6 @@ class ProfileDetailCard extends StatelessWidget {
     );
   }
 
-  // --- Main Build Method ---
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -69,9 +64,7 @@ class ProfileDetailCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Content for the 'About' section
           const SizedBox(height: 15),
-          // Title color updated
           _buildSectionTitle('About'),
           Text(
             mentor.about,
@@ -82,47 +75,30 @@ class ProfileDetailCard extends StatelessWidget {
               color: AppTheme.secondary,
             ),
           ),
-
           _buildSectionDivider(),
-
-          // Content for the 'I'm looking for' section
-          // Title color updated
           _buildSectionTitle("I'm looking for"),
           Wrap(
             children: mentor.lookingFor.map((e) => _buildChip(e)).toList(),
           ),
-
           _buildSectionDivider(),
-
-          // Content for the 'My budget is' section
-          // Title color updated
           _buildSectionTitle('My budget is: '),
           Padding(
             padding: const EdgeInsets.only(left: 0, bottom: 8),
             child: Text(
-              mentor.budget, // This is the price (e.g., PHP200/hr)
+              mentor.budget,
               style: AppTheme.montserratChip.copyWith(
-                // FIX: Updated color to Black (3D3D3D)
                 color: _kDarkGreyText,
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
             ),
           ),
-
           _buildSectionDivider(),
-
-          // Content for the 'Goals' section
-          // Title color updated
           _buildSectionTitle('Goals'),
           Wrap(
             children: mentor.goals.map((e) => _buildChip(e)).toList(),
           ),
-
           _buildSectionDivider(),
-
-          // Content for the 'Notes' section
-          // Title color updated
           _buildSectionTitle('Notes'),
           Text(
             mentor.notes,
@@ -133,7 +109,6 @@ class ProfileDetailCard extends StatelessWidget {
               color: AppTheme.secondary,
             ),
           ),
-
           const SizedBox(height: 40),
         ],
       ),

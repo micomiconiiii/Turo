@@ -1,3 +1,4 @@
+// For the Mentor Home Screen with swipeable mentee profiles
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'package:user_home_page/presentation/home/widgets/bottom_nav_bar.dart';
@@ -64,8 +65,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     );
   }
 
-  /// ---------- UI BUILDERS ----------
-
   Widget _buildHeader(MenteeProfile mentee) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
@@ -88,19 +87,17 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                   ),
           ),
 
-          // 2. GRADIENT OVERLAY
           Container(
             height: 320,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Color(0xCC000000)],
+                colors: [Colors.transparent, Color(0x73000000)],
               ),
             ),
           ),
 
-          // 3. NAME & OVERLAY SKILLS
           Positioned(
             bottom: 18,
             left: 18,
@@ -114,8 +111,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                   style: AppTheme.montserratName,
                 ),
                 const SizedBox(height: 8),
-
-                // HEADER CHIPS (Same Green as Body Chips)
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -127,7 +122,8 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                         color: AppTheme.chipGreen, // #2C6A64
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: AppTheme.white.withValues(alpha: 0.2)),
+                          color: AppTheme.white.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         skill,
@@ -151,16 +147,14 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-
-          // --- About ---
           _buildSectionTitle('About'),
           Text(
             mentee.bio,
-            style: AppTheme.montserratBody, // Regular, Size 15
+            style: AppTheme.montserratBody,
           ),
           _buildDivider(),
 
-          // --- I'm looking for ---
+          // I'm looking for
           _buildSectionTitle("I'm looking for:"),
           Wrap(
             spacing: 6,
@@ -171,7 +165,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           ),
           _buildDivider(),
 
-          // --- Budget ---
+          // Budget
           _buildSectionTitle('My budget is:'),
           Text(
             mentee.budget,
@@ -182,7 +176,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           ),
           _buildDivider(),
 
-          // --- Goals ---
+          // Goals
           _buildSectionTitle('Goals:'),
           Wrap(
             spacing: 6,
@@ -191,7 +185,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           ),
           _buildDivider(),
 
-          // --- Notes ---
+          // Notes
           _buildSectionTitle('Notes:'),
           Text(
             mentee.notes,
@@ -203,33 +197,29 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     );
   }
 
-  /// Helper for Section Titles
+  /// Helper for Section Titles (Matches About, and Goals)
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0, bottom: 6.0),
       child: Text(
         title,
-        style: AppTheme.montserratSectionTitle, // SemiBold, Size 20
+        style: AppTheme.montserratSectionTitle
+            .copyWith(color: AppTheme.black, fontSize: 18),
       ),
     );
   }
 
-  /// Helper for the Chips inside the body area
   Widget _buildBodyChip(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        // 🟢 FIXED: Used AppTheme.chipGreen (#2C6A64) based on your Figma proof
-        color: AppTheme.chipGreen,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        // Using Fustat (body3) Size 12 as requested
-        style: AppTheme.body3.copyWith(
-          color: AppTheme.white,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTheme.body3
+            .copyWith(color: AppTheme.white, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -306,8 +296,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
       ),
     );
   }
-
-  /// ---------- MAIN BUILD ----------
 
   @override
   Widget build(BuildContext context) {
