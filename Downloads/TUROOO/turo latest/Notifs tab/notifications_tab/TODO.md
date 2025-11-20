@@ -1,0 +1,2 @@
+- [x] Add 'avatarPath' property to _notifications list for matching senders (Mico Abas, Jhondel Nofies, Gio Sy, Nico Chan, Jose Santos, Rich Cua) using provided PNG paths.
+- [x] Update CircleAvatar in ListTile leading to use AssetImage(item['avatarPath'] ?? ImageConstant.imgEllipse32) with radius 20.0.
