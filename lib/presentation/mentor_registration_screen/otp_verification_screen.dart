@@ -106,6 +106,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
     }
   }
+  }
 
   @override
   Widget build(BuildContext context) {
