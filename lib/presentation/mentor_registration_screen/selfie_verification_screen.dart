@@ -70,17 +70,56 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
     );
   }
 
+  void _onSkipPressed() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CredentialsAchievementsScreen(
+          user: widget.user,
+          userDetail: widget.userDetail,
+          institutionalEmail: widget.institutionalEmail,
+          idType: widget.idType,
+          idFileName: widget.idFileName,
+          idFileBytes: widget.idFileBytes,
+          selfieFile: null, // Explicitly pass null for selfie
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appTheme.white_A700,
       resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: appTheme.blue_gray_700),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(bottom: 16.h, left: 20.h, right: 20.h),
-          child: CustomButton(
-            text: 'Upload',
-            onPressed: _pickedFile != null ? _uploadFile : null,
+          padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomButton(
+                text: 'Next',
+                onPressed: _pickedFile != null ? _uploadFile : null,
+                isExpanded: true,
+              ),
+              SizedBox(height: 16.h),
+              CustomButton(
+                text: 'Skip',
+                onPressed: _onSkipPressed,
+                backgroundColor: Colors.transparent,
+                textColor: appTheme.blue_gray_700,
+                isExpanded: true,
+              ),
+            ],
           ),
         ),
       ),
@@ -169,13 +208,24 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
 
               SizedBox(height: 20.h),
 
-              if (_pickedFile != null)
-                Center(
-                  child: kIsWeb
-                      ? Image.network(_pickedFile!.path, height: 200)
-                      : Image.file(File(_pickedFile!.path), height: 200),
+              Center(
+                child: CircleAvatar(
+                  radius: 100.h,
+                  backgroundColor: appTheme.blue_gray_100.withOpacity(0.3),
+                  backgroundImage: _pickedFile != null
+                      ? (kIsWeb
+                          ? NetworkImage(_pickedFile!.path)
+                          : FileImage(File(_pickedFile!.path))) as ImageProvider
+                      : null,
+                  child: _pickedFile == null
+                      ? Icon(
+                          Icons.camera_alt_outlined,
+                          size: 80.h,
+                          color: appTheme.blue_gray_700,
+                        )
+                      : null,
                 ),
-
+              ),
               SizedBox(height: 20.h),
 
               Center(

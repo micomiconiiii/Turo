@@ -14,7 +14,13 @@ class IdUploadScreen extends StatefulWidget {
   final UserModel user;
   final UserDetailModel userDetail;
   final String? institutionalEmail;
-  const IdUploadScreen({super.key, required this.user, required this.userDetail, this.institutionalEmail,});
+
+  const IdUploadScreen({
+    super.key,
+    required this.user,
+    required this.userDetail,
+    this.institutionalEmail,
+  });
 
   @override
   State<IdUploadScreen> createState() => _IdUploadScreenState();
@@ -74,7 +80,6 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
       return;
     }
 
-    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('ID uploaded successfully'),
@@ -82,38 +87,34 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
       ),
     );
 
-    // Navigate to next screen with ID data
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SelfieVerificationScreen(
-            user: widget.user,
-            userDetail: widget.userDetail,
-            idType: _selectedIdType,
-            idFileName: _fileName,
-            idFileBytes: _uploadedFileBytes,
-            // [CRITICAL] Pass the email forward
-            institutionalEmail: widget.institutionalEmail, 
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelfieVerificationScreen(
+          user: widget.user,
+          userDetail: widget.userDetail,
+          idType: _selectedIdType,
+          idFileName: _fileName,
+          idFileBytes: _uploadedFileBytes,
+          institutionalEmail: widget.institutionalEmail,
         ),
-        (route) => false,
-      );
-      print('Next pressed - ID Type: $_selectedIdType, File: $_fileName');
-    // }
+      ),
+    );
+
+    print('Next pressed - ID Type: $_selectedIdType, File: $_fileName');
   }
 
   void _onSkipPressed() {
-    // TODO: Navigate to next screen
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-            builder: (context) => SelfieVerificationScreen(
-                  user: widget.user,
-                  userDetail: widget.userDetail,
-                  institutionalEmail: widget.institutionalEmail,
-                )),
-        (route) => false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelfieVerificationScreen(
+          user: widget.user,
+          userDetail: widget.userDetail,
+          institutionalEmail: widget.institutionalEmail,
+        ),
+      ),
+    );
   }
 
   @override
@@ -128,55 +129,49 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
             children: [
               Text(
                 'TURO',
-                style: TextStyleHelper.instance.headline32SemiBoldFustat.copyWith(height: 1.44),
+                style: TextStyleHelper.instance.headline32SemiBoldFustat
+                    .copyWith(height: 1.44),
               ),
               SizedBox(height: 8.h),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Mentor Registration',
-                    style: TextStyleHelper.instance.title20SemiBoldFustat.copyWith(color: appTheme.gray_800, height: 1.45),
+                    style: TextStyleHelper.instance.title20SemiBoldFustat
+                        .copyWith(color: appTheme.gray_800, height: 1.45),
                   ),
                   Text(
                     'Step 3 out of 6',
-                    style: TextStyleHelper.instance.body12RegularFustat.copyWith(height: 1.5),
+                    style: TextStyleHelper.instance.body12RegularFustat
+                        .copyWith(height: 1.5),
                   ),
                 ],
               ),
 
-              // ---- PROGRESS BAR ----
               SizedBox(height: 8.h),
+
               Row(
-                children: [
-                  _buildProgressSegment(filled: true),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: true),
-                  SizedBox(width: 2.h),
-                  _buildProgressSegment(filled: true),
-                  SizedBox(width: 2.h),
-                  Expanded(
-                    child: Row(
-                      children: List.generate(
-                        3,
-                        (i) => Expanded(
-                          child: Container(
-                            height: 6.h,
-                            margin: EdgeInsets.only(right: i == 2 ? 0 : 2.h),
-                            decoration: BoxDecoration(
-                              color: appTheme.blue_gray_100,
-                              borderRadius: BorderRadius.circular(3.h),
-                            ),
-                          ),
-                        ),
+                children: List.generate(
+                  6,
+                  (index) => Expanded(
+                    child: Container(
+                      height: 6.h,
+                      margin: EdgeInsets.only(right: index == 5 ? 0 : 2.h),
+                      decoration: BoxDecoration(
+                        color: index < 3
+                            ? appTheme.blue_gray_700
+                            : appTheme.blue_gray_100,
+                        borderRadius: BorderRadius.circular(3.h),
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
 
-              // ---- PROFILE ICON ----
               SizedBox(height: 24.h),
+
               Center(
                 child: Container(
                   height: 100.h,
@@ -195,33 +190,35 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
                 ),
               ),
 
-              // ---- TITLE ----
               SizedBox(height: 12.h),
+
               Center(
                 child: Text(
                   'Upload Valid ID',
-                  style: TextStyleHelper.instance.title20SemiBoldFustat.copyWith(color: appTheme.gray_800, height: 1.45),
+                  style: TextStyleHelper.instance.title20SemiBoldFustat
+                      .copyWith(color: appTheme.gray_800, height: 1.45),
                 ),
               ),
+
               Center(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.h),
                   child: Text(
                     'Please select your ID type and upload a clear photo of your valid identification document',
                     textAlign: TextAlign.center,
-                    style: TextStyleHelper.instance.body12RegularFustat.copyWith(color: appTheme.gray_800, height: 1.5),
+                    style: TextStyleHelper.instance.body12RegularFustat
+                        .copyWith(color: appTheme.gray_800, height: 1.5),
                   ),
                 ),
               ),
 
-              // ---- FORM ----
               SizedBox(height: 32.h),
+
               Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ID Type Dropdown
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -229,23 +226,22 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
                         border: Border.all(color: appTheme.blue_gray_100),
                       ),
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedIdType,
+                        value: _selectedIdType,
                         decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 14.h),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.h, vertical: 14.h),
                           border: InputBorder.none,
                           hintText: 'Select ID Type',
-                          hintStyle: TextStyleHelper.instance.body12RegularFustat.copyWith(
-                            color: appTheme.gray_800,
-                          ),
+                          hintStyle: TextStyleHelper.instance.body12RegularFustat
+                              .copyWith(color: appTheme.gray_800),
                         ),
                         items: _idTypes.map((String type) {
                           return DropdownMenuItem<String>(
                             value: type,
                             child: Text(
                               type,
-                              style: TextStyleHelper.instance.body12RegularFustat.copyWith(
-                                color: appTheme.gray_800,
-                              ),
+                              style: TextStyleHelper.instance.body12RegularFustat
+                                  .copyWith(color: appTheme.gray_800),
                             ),
                           );
                         }).toList(),
@@ -262,21 +258,20 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
                         },
                       ),
                     ),
-                    
+
                     SizedBox(height: 16.h),
-                    
-                    // File Upload Box
+
                     GestureDetector(
                       onTap: _pickFile,
                       child: Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 16.h),
+                        padding: EdgeInsets.symmetric(
+                            vertical: 32.h, horizontal: 16.h),
                         decoration: BoxDecoration(
                           color: appTheme.blue_gray_100.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(8.h),
                           border: Border.all(
                             color: appTheme.blue_gray_100,
-                            style: BorderStyle.solid,
                             width: 2,
                           ),
                         ),
@@ -284,28 +279,39 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _uploadedFile != null || _uploadedFileBytes != null ? Icons.check_circle : Icons.cloud_upload_outlined,
+                              _uploadedFile != null ||
+                                      _uploadedFileBytes != null
+                                  ? Icons.check_circle
+                                  : Icons.cloud_upload_outlined,
                               size: 48.h,
-                              color: _uploadedFile != null || _uploadedFileBytes != null ? Colors.green : appTheme.blue_gray_700,
+                              color: _uploadedFile != null ||
+                                      _uploadedFileBytes != null
+                                  ? Colors.green
+                                  : appTheme.blue_gray_700,
                             ),
                             SizedBox(height: 8.h),
                             Text(
-                              _uploadedFile != null || _uploadedFileBytes != null ? _fileName ?? 'File uploaded' : 'Click to upload ID',
-                              style: TextStyleHelper.instance.body12RegularFustat.copyWith(
-                                color: appTheme.gray_800,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              _uploadedFile != null ||
+                                      _uploadedFileBytes != null
+                                  ? _fileName ?? 'File uploaded'
+                                  : 'Click to upload ID',
+                              style: TextStyleHelper.instance
+                                  .body12RegularFustat
+                                  .copyWith(
+                                      color: appTheme.gray_800,
+                                      fontWeight: FontWeight.w600),
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 4.h),
                             Text(
                               'Supported formats: JPG, PNG, PDF',
-                              style: TextStyleHelper.instance.body12RegularFustat.copyWith(
-                                color: appTheme.gray_800,
-                              ),
+                              style: TextStyleHelper.instance
+                                  .body12RegularFustat
+                                  .copyWith(color: appTheme.gray_800),
                               textAlign: TextAlign.center,
                             ),
-                            if (_uploadedFile != null || _uploadedFileBytes != null) ...[
+                            if (_uploadedFile != null ||
+                                _uploadedFileBytes != null) ...[
                               SizedBox(height: 8.h),
                               TextButton.icon(
                                 onPressed: _pickFile,
@@ -325,33 +331,29 @@ class _IdUploadScreenState extends State<IdUploadScreen> {
               ),
 
               SizedBox(height: 32.h),
-              CustomButton(
-                text: 'Next',
-                onPressed: _onNextPressed,
-                backgroundColor: appTheme.blue_gray_700,
-                textColor: Colors.white,
+
+              Center(
+                child: CustomButton(
+                  text: 'Next',
+                  onPressed: _onNextPressed,
+                  backgroundColor: appTheme.blue_gray_700,
+                  textColor: Colors.white,
+                ),
               ),
+
               SizedBox(height: 16.h),
-              CustomButton(
-                text: 'Skip',
-                onPressed: _onSkipPressed,
-                backgroundColor: Colors.transparent,
-                textColor: appTheme.blue_gray_700,
+
+              Center(
+                child: CustomButton(
+                  text: 'Skip',
+                  onPressed: _onSkipPressed,
+                  backgroundColor: Colors.transparent,
+                  textColor: appTheme.blue_gray_700,
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildProgressSegment({required bool filled}) {
-    return Container(
-      height: 6.h,
-      width: 52.h,
-      decoration: BoxDecoration(
-        color: filled ? appTheme.blue_gray_700 : appTheme.blue_gray_100,
-        borderRadius: BorderRadius.circular(3.h),
       ),
     );
   }

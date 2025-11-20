@@ -1,22 +1,20 @@
 // This screen is for institutional verification during mentor registration (STEP 2 out of 6).
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:turo/presentation/mentor_registration_screen/id_upload_screen.dart';
 import '../../core/app_export.dart';
-import '../../widgets/custom_edit_text.dart';
-import '../../widgets/custom_image_view.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/custom_firebase_otp_service.dart';
 import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
-import 'otp_verification_screen.dart'; // Standardized import
+import 'otp_verification_screen.dart';
+import '../../widgets/custom_edit_text.dart';
 
 enum ButtonVariant { fillPrimary, outlineBlack }
 
 class InstitutionalVerificationScreen extends StatefulWidget {
   final UserModel user;
   final UserDetailModel userDetail;
-  // Removed mentorProfile from constructor if it's not being used or passed from previous screen yet
-  // If you need it, keep it, but usually it is built step-by-step.
   
   const InstitutionalVerificationScreen({
     super.key, 
@@ -55,8 +53,14 @@ class _InstitutionalVerificationScreenState
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('OTP sent to $institutionalEmailInput'),
+              content: Text(
+                'OTP sent to $institutionalEmailInput',
+                style: TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.fromLTRB(20.h, 5.h, 20.h, 20.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.h)),
             ),
           );
           
@@ -65,23 +69,24 @@ class _InstitutionalVerificationScreenState
             context,
             MaterialPageRoute(
               builder: (context) => OtpVerificationScreen(
-                // ERROR FIX: Parameter name must match the constructor ('email')
-                email: institutionalEmailInput, 
-                
-                // Pass the user objects (Keep personal data intact)
+                email: institutionalEmailInput,
                 user: widget.user,
                 userDetail: widget.userDetail, 
-                
-                // IMPT: Set this flag to true so the next screen knows this is NOT the personal email
                 isInstitutional: true, 
               ),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to send OTP. Please try again.'),
+            SnackBar(
+              content: Text(
+                'Failed to send OTP. Please try again.',
+                style: TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -89,8 +94,14 @@ class _InstitutionalVerificationScreenState
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(
+              'Error: ${e.toString()}',
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.fromLTRB(20.h, 5.h, 20.h, 20.h),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.h)),
           ),
         );
       }
@@ -102,8 +113,6 @@ class _InstitutionalVerificationScreenState
         builder: (context) => IdUploadScreen(
           user: widget.user,
           userDetail: widget.userDetail,
-          // [FIX] Pass null because the user skipped verification
-          // Ensure IdUploadScreen accepts String? for this parameter
           institutionalEmail: null, 
         ),
       ),
@@ -121,6 +130,33 @@ class _InstitutionalVerificationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 16.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: CustomButton(
+                  text: 'Send OTP',
+                  onPressed: _onSendOTPPressed,
+                  backgroundColor: appTheme.blue_gray_700,
+                  textColor: Colors.white,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Center(
+                child: CustomButton(
+                  text: 'Skip',
+                  onPressed: _onSkipPressed,
+                  backgroundColor: Colors.transparent,
+                  textColor: appTheme.blue_gray_700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       backgroundColor: appTheme.white_A700,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -128,10 +164,21 @@ class _InstitutionalVerificationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'TURO',
-                style: TextStyleHelper.instance.headline32SemiBoldFustat
-                    .copyWith(height: 1.44),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: appTheme.blue_gray_700),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  SizedBox(width: 16.h),
+                  Text(
+                    'TURO',
+                    style: TextStyleHelper.instance.headline32SemiBoldFustat
+                        .copyWith(height: 1.44),
+                  ),
+                ],
               ),
               SizedBox(height: 8.h),
               Row(
@@ -179,11 +226,11 @@ class _InstitutionalVerificationScreenState
                     borderRadius: BorderRadius.circular(50.h),
                   ),
                   child: Center(
-                    child: CustomImageView(
-                      imagePath: ImageConstant.imgPath184,
-                      height: 50.h,
-                      width: 50.h,
-                    ),
+                    child: FaIcon(
+                      FontAwesomeIcons.buildingColumns,
+                      size: 50.h,
+                      color: Colors.white,
+                    ), // Using a ready-made vector icon
                   ),
                 ),
               ),
@@ -199,7 +246,7 @@ class _InstitutionalVerificationScreenState
                 child: Text(
                   'Turo will send a verification code to verify your affiliation with the organization',
                   style: TextStyleHelper.instance.body12RegularFustat.copyWith(color: appTheme.gray_800, height: 1.5),
-                  textAlign: TextAlign.center, // Added align for better UI
+                  textAlign: TextAlign.center, 
                 ),
               ),
               SizedBox(height: 32.h),
@@ -209,7 +256,7 @@ class _InstitutionalVerificationScreenState
                   children: [
                     CustomEditText(
                       controller: _institutionController,
-                      placeholder: 'Institution/Organization',
+                      labelText: 'Institution/Organization',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your institution';
@@ -220,7 +267,7 @@ class _InstitutionalVerificationScreenState
                     SizedBox(height: 16.h),
                     CustomEditText(
                       controller: _emailController,
-                      placeholder: 'Institutional Email',
+                      labelText: 'Institutional Email',
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -247,7 +294,7 @@ class _InstitutionalVerificationScreenState
                     SizedBox(height: 16.h),
                     CustomEditText(
                       controller: _jobController,
-                      placeholder: 'Job Description',
+                      labelText: 'Job Description',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your job description';
@@ -257,24 +304,6 @@ class _InstitutionalVerificationScreenState
                     ),
                   ],
                 ),
-              ),
-              SizedBox(height: 32.h),
-              Center(
-              child: CustomButton(
-                text: 'Send OTP',
-                onPressed: _onSendOTPPressed,
-                backgroundColor: appTheme.blue_gray_700,
-                textColor: Colors.white,
-              ),
-              ), 
-              SizedBox(height: 16.h),
-              Center(
-              child: CustomButton(
-                text: 'Skip',
-                onPressed: _onSkipPressed,
-                backgroundColor: Colors.transparent,
-                textColor: appTheme.blue_gray_700,
-              ),
               ),
             ],
           ),
