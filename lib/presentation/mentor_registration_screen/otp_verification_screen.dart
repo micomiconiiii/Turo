@@ -2,6 +2,7 @@
 // - Default behavior (no callback): Routes based on user role after verification
 // - Custom callback: Executes the provided callback instead (e.g., for institutional verification)
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Needed for User type in deferred signup
 import 'package:pinput/pinput.dart';
 import '../../core/app_export.dart';
 import '../../services/custom_firebase_otp_service.dart';
@@ -11,6 +12,8 @@ import '../../widgets/custom_button.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
+  final String? password; // Provided only for deferred signup
+  final String? role; // 'mentor' or 'mentee' when deferred signup
 
   /// Optional: Custom navigation after successful OTP verification.
   /// If provided, this will be called instead of the default role-based routing.
@@ -19,6 +22,8 @@ class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({
     super.key,
     required this.email,
+    this.password,
+    this.role,
     this.onVerificationSuccess,
   });
 
@@ -67,18 +72,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           return;
         }
 
-        // Otherwise, navigate based on user role (default behavior for initial signup)
+        // Deferred signup flow: create user now if not authenticated yet and we have password+role
         try {
-          final uid = _authService.currentUser?.uid;
-          if (uid == null) {
-            throw Exception('User not logged in');
+          User? current = _authService.currentUser;
+          if (current == null &&
+              widget.password != null &&
+              widget.role != null) {
+            current = await _authService.signUpWithEmailPassword(
+              widget.email,
+              widget.password!,
+              widget.email.split('@')[0],
+              widget.role!,
+            );
           }
+          if (current == null) throw Exception('User creation failed');
 
-          final userDoc = await _databaseService.getUser(uid);
-          if (!userDoc.exists) {
-            throw Exception('User data not found');
-          }
-
+          final userDoc = await _databaseService.getUser(current.uid);
+          if (!userDoc.exists) throw Exception('User data not found');
           final role = (userDoc.data() as Map<String, dynamic>)['roles'][0];
 
           if (!mounted) return;
@@ -86,7 +96,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             Navigator.pushReplacementNamed(
               context,
               AppRoutes.mentorRegistrationScreen,
-              arguments: uid,
+              arguments: current.uid,
             );
           } else {
             Navigator.pushReplacementNamed(
@@ -98,7 +108,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error finding user role: $e'),
+              content: Text('Error finalizing signup: $e'),
               backgroundColor: Colors.red,
             ),
           );

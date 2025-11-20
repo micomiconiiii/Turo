@@ -3,7 +3,7 @@ import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
-import '../../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/custom_firebase_otp_service.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final AuthService _authService = AuthService();
+  // We defer actual auth user creation until OTP verification.
 
   bool _isMentor = false;
   bool _isLoading = false;
@@ -359,40 +359,37 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       });
 
       try {
-        // Use AuthService to sign up with explicit role from UI
-        final user = await _authService.signUpWithEmailPassword(
-          _emailController.text,
-          _passwordController.text,
-          _emailController.text.split('@')[0], // Use email prefix as fullName
-          _isMentor ? 'mentor' : 'mentee', // Pass the role from tab selection
+        // Check if email already has sign-in methods (prevent duplicate accounts)
+        final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(
+          _emailController.text.trim(),
+        );
+        if (methods.isNotEmpty) {
+          throw Exception('email-already-in-use');
+        }
+
+        // Send OTP email for verification only (no auth user yet)
+        await CustomFirebaseOtpService.requestEmailOTP(
+          _emailController.text.trim(),
         );
 
-        if (user != null && mounted) {
-          // Send OTP email for verification
-          await CustomFirebaseOtpService.requestEmailOTP(_emailController.text);
-
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Account created successfully! Please verify your email.',
-              ),
-              backgroundColor: Color(0xFF10403B),
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Small delay for user to see the success message
-          await Future.delayed(Duration(milliseconds: 500));
-
-          if (!mounted) return;
-
-          // Navigate to email verification screen
-          Navigator.of(context).pushReplacementNamed(
-            AppRoutes.emailVerificationScreen,
-            arguments: _emailController.text,
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('OTP sent! Please verify to complete registration.'),
+            backgroundColor: Color(0xFF10403B),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.emailVerificationScreen,
+          arguments: {
+            'email': _emailController.text.trim(),
+            'password': _passwordController.text,
+            'role': _isMentor ? 'mentor' : 'mentee',
+          },
+        );
       } catch (e) {
         if (mounted) {
           // Show error message with more detailed information

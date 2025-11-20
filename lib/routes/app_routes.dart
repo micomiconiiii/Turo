@@ -42,7 +42,15 @@ class AppRoutes {
     credentialsAchievementsScreen: (context) => CredentialsAchievementsScreen(),
     selfieVerificationScreen: (context) => SelfieVerificationScreen(),
     emailVerificationScreen: (context) {
-      final email = ModalRoute.of(context)!.settings.arguments as String;
+      final args = ModalRoute.of(context)!.settings.arguments;
+      if (args is Map) {
+        return OtpVerificationScreen(
+          email: args['email'] as String,
+          password: args['password'] as String?,
+          role: args['role'] as String?,
+        );
+      }
+      final email = args as String; // backward compatibility
       return OtpVerificationScreen(email: email);
     },
     termsAndConditionsScreen: (context) => TermsAndConditionsScreen(),

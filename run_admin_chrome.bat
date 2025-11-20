@@ -1,0 +1,3 @@
+@echo off
+echo Starting Admin Panel on Chrome...
+flutter run -d chrome --web-port=5000

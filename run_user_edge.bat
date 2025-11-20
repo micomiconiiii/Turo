@@ -1,0 +1,3 @@
+@echo off
+echo Starting User Flow on Edge with DevicePreview...
+flutter run -d edge --dart-define=USER_MODE=true --web-port=8080

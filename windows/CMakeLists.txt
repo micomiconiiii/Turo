@@ -2,6 +2,13 @@
 cmake_minimum_required(VERSION 3.14)
 project(turo LANGUAGES CXX)
 
+# Suppress MSVC warnings for Firebase SDK and plugins
+if(MSVC)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+  add_compile_options(/wd4996 /wd4005)
+  # Allow default MSVC runtime selection (/MD or /MDd) to avoid mismatch with prebuilt SDKs.
+endif()
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "turo")
@@ -39,9 +46,11 @@ add_definitions(-DUNICODE -D_UNICODE)
 # of modifying this function.
 function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_features(${TARGET} PUBLIC cxx_std_17)
-  target_compile_options(${TARGET} PRIVATE /W4 /WX /wd"4100")
+  # Use warning level 4 but do NOT treat warnings as errors to avoid third-party SDK build breaks
+  target_compile_options(${TARGET} PRIVATE /W4 /wd"4100")
   target_compile_options(${TARGET} PRIVATE /EHsc)
-  target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
+  # Ensure exceptions remain enabled (Firebase & C++ std libs rely on them)
+  # Removed _HAS_EXCEPTIONS=0 which caused missing std::bad_cast symbols
   target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
 endfunction()
 
@@ -49,9 +58,9 @@ endfunction()
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
 
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
-
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
