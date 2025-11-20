@@ -28,27 +28,24 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF10403B),
+      backgroundColor: const Color(0xFF10403B),
       body: SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 84.h),
             // Logo section
-            SizedBox(
-              width: 164.h,
+            CustomImageView(
+              imagePath: 'assets/images/turo-logo.png', // Ensure this path is correct
               height: 206.h,
-              child: CustomImageView(
-                imagePath: ImageConstant.imgGroup222WhiteA700,
-                height: 206.h,
-                width: 164.h,
-              ),
+              width: 164.h,
+              fit: BoxFit.contain, // Show the full image without cropping
             ),
-            SizedBox(height: 1.h),
+            SizedBox(height: 16.h),
             // TURO text
             Text(
               'TURO',
               style: TextStyleHelper.instance.display40ExtraBoldFustat
-                  .copyWith(color: Color(0xFFECEEF0)),
+                  .copyWith(color: const Color(0xFFFEFEFE)),
             ),
             SizedBox(height: 26.h),
             // Registration form container

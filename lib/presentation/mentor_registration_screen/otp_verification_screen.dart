@@ -49,23 +49,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       setState(() => _isVerifying = true);
 
       final otp = _pinController.text.trim();
-
-      // The backend still generates a token/user, but we will decide
-      // what to do with it based on the flag below.
       final result = await CustomFirebaseOtpService.verifyEmailOTP(widget.email, otp);
       
       if (!mounted) return;
       setState(() => _isVerifying = false);
 
-      // Assuming your service returns a Map or boolean. 
-      // Adjust 'result' check based on your actual service return type.
-      // If it returns boolean: if (result)
-      // If it returns Map: if (result['success'])
       if (result == true) { 
         
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Email verified successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF10403B),
         ));
 
         // --- 2. LOGIC BRANCH ---
@@ -163,7 +156,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ? 'OTP resent successfully'
                               : 'Failed to resend OTP',
                         ),
-                        backgroundColor: success ? Colors.green : Colors.red,
+                        backgroundColor: success ? Color(0xFF10403B) : Colors.red,
                       ),
                     );
                   },
