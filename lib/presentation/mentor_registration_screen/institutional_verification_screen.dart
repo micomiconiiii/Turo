@@ -15,11 +15,11 @@ enum ButtonVariant { fillPrimary, outlineBlack }
 class InstitutionalVerificationScreen extends StatefulWidget {
   final UserModel user;
   final UserDetailModel userDetail;
-  
+
   const InstitutionalVerificationScreen({
-    super.key, 
-    required this.user, 
-    required this.userDetail
+    super.key,
+    required this.user,
+    required this.userDetail,
   });
 
   @override
@@ -34,11 +34,11 @@ class _InstitutionalVerificationScreenState
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _jobController = TextEditingController();
 
- void _onSendOTPPressed() async {
+  void _onSendOTPPressed() async {
     if (_formKey.currentState?.validate() ?? false) {
       // 1. Capture the input
       final institutionalEmailInput = _emailController.text.trim();
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -47,7 +47,9 @@ class _InstitutionalVerificationScreenState
 
       try {
         // 2. Request OTP
-        final success = await CustomFirebaseOtpService.requestEmailOTP(institutionalEmailInput);
+        final success = await CustomFirebaseOtpService.requestEmailOTP(
+          institutionalEmailInput,
+        );
         Navigator.pop(context);
 
         if (success) {
@@ -60,19 +62,26 @@ class _InstitutionalVerificationScreenState
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               margin: EdgeInsets.fromLTRB(20.h, 5.h, 20.h, 20.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.h)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.h),
+              ),
             ),
           );
-          
+
           // 3. Navigate with Correct Arguments
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => OtpVerificationScreen(
+                // ERROR FIX: Parameter name must match the constructor ('email')
                 email: institutionalEmailInput,
+
+                // Pass the user objects (Keep personal data intact)
                 user: widget.user,
-                userDetail: widget.userDetail, 
-                isInstitutional: true, 
+                userDetail: widget.userDetail,
+
+                // IMPT: Set this flag to true so the next screen knows this is NOT the personal email
+                isInstitutional: true,
               ),
             ),
           );
@@ -86,7 +95,9 @@ class _InstitutionalVerificationScreenState
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -101,19 +112,24 @@ class _InstitutionalVerificationScreenState
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.fromLTRB(20.h, 5.h, 20.h, 20.h),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.h)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.h),
+            ),
           ),
         );
       }
     }
-  } 
+  }
+
   void _onSkipPressed() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => IdUploadScreen(
           user: widget.user,
           userDetail: widget.userDetail,
-          institutionalEmail: null, 
+          // [FIX] Pass null because the user skipped verification
+          // Ensure IdUploadScreen accepts String? for this parameter
+          institutionalEmail: null,
         ),
       ),
     );
@@ -245,8 +261,11 @@ class _InstitutionalVerificationScreenState
               Center(
                 child: Text(
                   'Turo will send a verification code to verify your affiliation with the organization',
-                  style: TextStyleHelper.instance.body12RegularFustat.copyWith(color: appTheme.gray_800, height: 1.5),
-                  textAlign: TextAlign.center, 
+                  style: TextStyleHelper.instance.body12RegularFustat.copyWith(
+                    color: appTheme.gray_800,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center, // Added align for better UI
                 ),
               ),
               SizedBox(height: 32.h),

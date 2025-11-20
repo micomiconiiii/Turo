@@ -11,18 +11,22 @@ import './id_upload_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
-  final UserModel user;
-  final UserDetailModel userDetail;
+  final UserModel? user; // Optional in deferred signup flow
+  final UserDetailModel? userDetail; // Optional in deferred signup flow
   final String? institutionalEmail;
-  final bool isInstitutional; // <--- 1. Add this flag
+  final bool isInstitutional; // true when verifying institutional email
+  final String? password; // Provided only in deferred signup path
+  final String? role; // Provided only in deferred signup path
 
   const OtpVerificationScreen({
     super.key,
     required this.email,
-    required this.user,
-    required this.userDetail,
+    this.user,
+    this.userDetail,
     this.institutionalEmail,
-    this.isInstitutional = false, // Default to false (Normal flow)
+    this.isInstitutional = false,
+    this.password,
+    this.role,
   });
 
   @override
@@ -43,62 +47,130 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   void _onVerifyPressed() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isVerifying = true);
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isVerifying = true);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    setState(() => _isVerifying = true);
+
+    try {
       final otp = _pinController.text.trim();
-      final result = await CustomFirebaseOtpService.verifyEmailOTP(widget.email, otp);
-      
+
+      // Verify OTP and sign in with custom token
+      final result = await CustomFirebaseOtpService.verifyEmailOTP(
+        widget.email,
+        otp,
+      );
+
       if (!mounted) return;
-      setState(() => _isVerifying = false);
 
-      if (result == true) { 
-        
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Email verified successfully!'),
-          backgroundColor: Color(0xFF10403B),
-        ));
+      if (result == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email verified successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-        // --- 2. LOGIC BRANCH ---
+        // Check if this is institutional verification flow
         if (widget.isInstitutional) {
-          // CASE A: Institutional Verification
-          // We do NOT go forward. We go BACK to the form, passing the verified email.
-          // We do NOT sign in with the token.
+          // Institutional mentor email verification continues to ID upload
+          if (widget.user == null || widget.userDetail == null) {
+            throw Exception('Missing user data for institutional flow');
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => IdUploadScreen(
-                user: widget.user,
-                userDetail: widget.userDetail,
-                
-                // THIS IS THE KEY: Pass the verified email forward
-                institutionalEmail: widget.email, 
-              )
+                user: widget.user!,
+                userDetail: widget.userDetail!,
+                institutionalEmail: widget.email,
+              ),
             ),
           );
         } else {
-          // CASE B: Primary Registration Flow
-          // Your existing logic (Push forward)
-          Navigator.pushAndRemoveUntil(
+          // Deferred signup: User is already authenticated via custom token
+          // Now create Firestore documents if they don't exist
+          final uid = _authService.currentUser?.uid;
+          if (uid == null) throw Exception('User not authenticated after OTP');
+
+          final userDoc = await _databaseService.getUser(uid);
+
+          // If user document doesn't exist, create initial documents
+          if (!userDoc.exists && widget.role != null) {
+            await _databaseService.createInitialUser(
+              uid,
+              widget.email,
+              widget.role!,
+            );
+          }
+
+          // Re-fetch to get the user data
+          final refreshedUserDoc = await _databaseService.getUser(uid);
+          if (!refreshedUserDoc.exists)
+            throw Exception('User document missing after creation');
+          final data = refreshedUserDoc.data() as Map<String, dynamic>;
+          final roles = List<String>.from(data['roles'] ?? []);
+
+          // Prepare user models if absent (deferred mentor path)
+          final preparedUser =
+              widget.user ??
+              UserModel(
+                userId: uid,
+                displayName: widget.email.split('@').first,
+                roles: roles,
+              );
+          final preparedUserDetail =
+              widget.userDetail ??
+              UserDetailModel(
+                userId: uid,
+                email: widget.email,
+                fullName: '',
+                birthdate: DateTime.now(),
+                address: '',
+                createdAt: DateTime.now(),
+              );
+          if (!mounted) return;
+          if (roles.contains('mentor')) {
+            Navigator.pushReplacementNamed(
               context,
-              MaterialPageRoute(
-                  builder: (context) => IdUploadScreen(
-                        user: widget.user,
-                        userDetail: widget.userDetail,
-                      )),
-              (route) => false);
+              AppRoutes.mentorRegistrationScreen,
+              arguments: {
+                'user': preparedUser,
+                'userDetail': preparedUserDetail,
+              },
+            );
+          } else if (roles.contains('mentee')) {
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.menteeOnboardingPage,
+            );
+          } else {
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.appNavigationScreen,
+            );
+          }
         }
-        
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Invalid or expired OTP. Please try again.'),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid or expired OTP. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Verification failed: ${e.toString()}'),
           backgroundColor: Colors.red,
-        ));
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isVerifying = false);
       }
     }
-  }
   }
 
   @override
@@ -147,7 +219,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     : CustomButton(text: 'Verify', onPressed: _onVerifyPressed),
                 TextButton(
                   onPressed: () async {
-                    final success = await CustomFirebaseOtpService.resendEmailOTP(widget.email);
+                    final success =
+                        await CustomFirebaseOtpService.resendEmailOTP(
+                          widget.email,
+                        );
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -156,7 +231,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ? 'OTP resent successfully'
                               : 'Failed to resend OTP',
                         ),
-                        backgroundColor: success ? Color(0xFF10403B) : Colors.red,
+                        backgroundColor: success
+                            ? Color(0xFF10403B)
+                            : Colors.red,
                       ),
                     );
                   },

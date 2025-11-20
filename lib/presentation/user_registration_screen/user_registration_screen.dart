@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
-import '../../widgets/custom_image_view.dart';
-import 'package:turo/models/user_detail_model.dart';
-import 'package:turo/models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// Deferred signup: we no longer create the auth user or Firestore docs here.
+// User creation happens after OTP verification.
+import 'package:turo/services/custom_firebase_otp_service.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({Key? key}) : super(key: key);
@@ -16,12 +16,13 @@ class UserRegistrationScreen extends StatefulWidget {
 
 class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  
+
+  bool _isLoading = false;
+
   // Tab state
   bool _isMentor = false;
 
@@ -34,18 +35,26 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           children: [
             SizedBox(height: 84.h),
             // Logo section
-            CustomImageView(
-              imagePath: 'assets/images/turo-logo.png', // Ensure this path is correct
-              height: 206.h,
+            Container(
               width: 164.h,
-              fit: BoxFit.contain, // Show the full image without cropping
+              height: 206.h,
+              decoration: BoxDecoration(
+                color: appTheme.blue_gray_700,
+                borderRadius: BorderRadius.circular(20.h),
+              ),
+              child: Icon(
+                Icons.school_outlined,
+                size: 120.h,
+                color: Colors.white,
+              ),
             ),
             SizedBox(height: 16.h),
             // TURO text
             Text(
               'TURO',
-              style: TextStyleHelper.instance.display40ExtraBoldFustat
-                  .copyWith(color: const Color(0xFFFEFEFE)),
+              style: TextStyleHelper.instance.display40ExtraBoldFustat.copyWith(
+                color: Color(0xFFECEEF0),
+              ),
             ),
             SizedBox(height: 26.h),
             // Registration form container
@@ -78,8 +87,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   SizedBox(height: 27.h),
                   // Form section
                   Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 36.h, vertical: 22.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 36.h,
+                      vertical: 22.h,
+                    ),
                     child: _buildRegistrationForm(context),
                   ),
                 ],
@@ -114,11 +125,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
               child: Text(
                 "I'm a Mentee",
                 textAlign: TextAlign.center,
-                style: TextStyleHelper.instance.body16RegularFustat
-                    .copyWith(
-                      color: !_isMentor ? Color(0xFF3D3D3D) : Color(0xFFB0B0B0),
-                      fontWeight: !_isMentor ? FontWeight.w600 : FontWeight.w400,
-                    ),
+                style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+                  color: !_isMentor ? Color(0xFF3D3D3D) : Color(0xFFB0B0B0),
+                  fontWeight: !_isMentor ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
           ),
@@ -143,11 +153,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
               child: Text(
                 "I'm a Mentor",
                 textAlign: TextAlign.center,
-                style: TextStyleHelper.instance.body16RegularFustat
-                    .copyWith(
-                      color: _isMentor ? Color(0xFF3D3D3D) : Color(0xFFB0B0B0),
-                      fontWeight: _isMentor ? FontWeight.w600 : FontWeight.w400,
-                    ),
+                style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+                  color: _isMentor ? Color(0xFF3D3D3D) : Color(0xFFB0B0B0),
+                  fontWeight: _isMentor ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
           ),
@@ -161,19 +170,11 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       key: _formKey,
       child: Column(
         children: [
-          // Username field
-          CustomEditText(
-            controller: _usernameController,
-            placeholder: 'Username',
-            prefixIconPath: ImageConstant.imgVectorGray800,
-            validator: _validateUsername,
-          ),
-          SizedBox(height: 16.h),
           // Email field
           CustomEditText(
             controller: _emailController,
             placeholder: 'Email',
-            prefixIconPath: ImageConstant.imgEmail1572,
+            prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: _validateEmail,
           ),
@@ -182,7 +183,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           CustomEditText(
             controller: _passwordController,
             placeholder: 'Password',
-            prefixIconPath: ImageConstant.imgVectorGray80018x20,
+            prefixIcon: Icons.lock_outlined,
             isPassword: true,
             validator: _validatePassword,
           ),
@@ -191,7 +192,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           CustomEditText(
             controller: _confirmPasswordController,
             placeholder: 'Confirm Password',
-            prefixIconPath: ImageConstant.imgVectorGray80018x20,
+            prefixIcon: Icons.lock_outlined,
             isPassword: true,
             validator: _validateConfirmPassword,
           ),
@@ -205,27 +206,33 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
               ),
               child: Text(
                 'You will be guided through institutional verification and credential submission after registration.',
-                style: TextStyleHelper.instance.body12RegularFustat
-                    .copyWith(color: Color(0xFF2C6A64)),
+                style: TextStyleHelper.instance.body12RegularFustat.copyWith(
+                  color: Color(0xFF2C6A64),
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
           ],
           SizedBox(height: 22.h),
           // Sign Up button
-          CustomButton(
-            text: 'Sign Up',
-            onPressed: () => _onSignUpPressed(context),
-            backgroundColor: Color(0xFF10403B),
-            textColor: Color(0xFFFEFEFE),
-            fontSize: 20.fSize,
-            fontWeight: FontWeight.w600,
-            borderRadius: 14.h,
-            height: 48.h,
-            isExpanded: true,
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 30.h),
-          ),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : CustomButton(
+                  text: 'Sign Up',
+                  onPressed: () => _onSignUpPressed(context),
+                  backgroundColor: Color(0xFF10403B),
+                  textColor: Color(0xFFFEFEFE),
+                  fontSize: 20.fSize,
+                  fontWeight: FontWeight.w600,
+                  borderRadius: 14.h,
+                  height: 48.h,
+                  isExpanded: true,
+                  margin: EdgeInsets.zero,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 8.h,
+                    horizontal: 30.h,
+                  ),
+                ),
           SizedBox(height: 6.h),
           // Sign in link
           GestureDetector(
@@ -250,16 +257,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         ],
       ),
     );
-  }
-
-  String? _validateUsername(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter username';
-    }
-    if (value.length < 3) {
-      return 'Username must be at least 3 characters';
-    }
-    return null;
   }
 
   String? _validateEmail(String? value) {
@@ -292,62 +289,71 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     return null;
   }
 
-// Inside _UserRegistrationScreenState
-void _onSignUpPressed(BuildContext context) {
-  if (_formKey.currentState!.validate()) {
-    
-    // 1. Capture the data 
-    final email = _emailController.text.trim();
-    final username = _usernameController.text.trim();
-    // Determine the user's role array
-    final List<String> userRoles = _isMentor ? ['mentor'] : ['mentee'];
-    final tempUid = DateTime.now().millisecondsSinceEpoch.toString();
-    
-    // 2. Create the Models
-    final newUser = UserModel(
-      userId: tempUid,
-      displayName: username,
-      roles: userRoles,
-    );
+  Future<void> _onSignUpPressed(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final role = _isMentor ? 'mentor' : 'mentee';
 
-    final newUserDetail = UserDetailModel(
-      userId: tempUid,
-      email: email, 
-      fullName: username, 
-      birthdate: DateTime.now(),
-      address: '', 
-      createdAt: DateTime.now(),
-    );
-
-    // Show success message and navigate...
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Registration successful!'),
-        backgroundColor: Color(0xFF10403B),
-      ),
-    );
-
-    // 3. Navigate and PASS the models
-    if (_isMentor) {
-      Navigator.of(context).pushNamed(
-        AppRoutes.mentorRegistrationScreen,
-        arguments: {
-          'user': newUser,
-          'userDetail': newUserDetail,
-        }, 
+      // Ensure email not already registered
+      final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(
+        email,
       );
-    } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.loginScreen);
+      if (methods.isNotEmpty) {
+        throw Exception('Email already in use');
+      }
+
+      final otpSent = await CustomFirebaseOtpService.requestEmailOTP(email);
+      if (!otpSent) throw Exception('Failed to send OTP');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP sent! Please verify to complete registration.'),
+          backgroundColor: Color(0xFF10403B),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+
+      Navigator.of(context).pushNamed(
+        AppRoutes.emailVerificationScreen,
+        arguments: {
+          'email': email,
+          'password': password,
+          'role': role,
+          'isInstitutional': false,
+        },
+      );
+
+      _emailController.clear();
+      _passwordController.clear();
+      _confirmPasswordController.clear();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    
-    // 4. Clear controllers
-    _usernameController.clear();
-    _emailController.clear();
-    _passwordController.clear();
-    _confirmPasswordController.clear();
   }
-}
+
   void _onSignInPressed(BuildContext context) {
     Navigator.of(context).pushNamed(AppRoutes.loginScreen);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }

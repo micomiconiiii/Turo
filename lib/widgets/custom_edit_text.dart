@@ -9,6 +9,7 @@ class CustomEditText extends StatefulWidget {
     this.controller,
     this.placeholder,
     this.prefixIconPath,
+    this.prefixIcon,
     this.isPassword = false,
     this.validator,
     this.keyboardType,
@@ -21,6 +22,7 @@ class CustomEditText extends StatefulWidget {
   final TextEditingController? controller;
   final String? placeholder;
   final String? prefixIconPath;
+  final IconData? prefixIcon;
   final bool isPassword;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
@@ -53,25 +55,33 @@ class _CustomEditTextState extends State<CustomEditText> {
         validator: widget.validator,
         keyboardType: widget.keyboardType ?? TextInputType.text,
         onTap: widget.onTap,
-        style: TextStyleHelper.instance.body16RegularFustat
-            .copyWith(color: Color(0xFF3D3D3D)),
+        style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+          color: Color(0xFF3D3D3D),
+        ),
         decoration: InputDecoration(
           labelText: widget.labelText,
           labelStyle: TextStyle(color: Colors.black.withAlpha(128)),
           hintText: widget.placeholder ?? "",
           hintStyle: TextStyle(color: Colors.black.withAlpha(64)),
-          prefixIcon: widget.prefixIconPath != null
-              ? Padding(
-                  padding: EdgeInsets.all(12.h),
-                  child: CustomImageView(
-                    imagePath: widget.prefixIconPath!,
-                    height: 18.h,
-                    width:
-                        widget.prefixIconPath!.contains('18x20') ? 20.h : 16.h,
-                    fit: BoxFit.contain,
-                  ),
+          prefixIcon: widget.prefixIcon != null
+              ? Icon(
+                  widget.prefixIcon,
+                  color: Colors.black.withAlpha(128),
+                  size: 20.h,
                 )
-              : null,
+              : (widget.prefixIconPath != null
+                    ? Padding(
+                        padding: EdgeInsets.all(12.h),
+                        child: CustomImageView(
+                          imagePath: widget.prefixIconPath!,
+                          height: 18.h,
+                          width: widget.prefixIconPath!.contains('18x20')
+                              ? 20.h
+                              : 16.h,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    : null),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 14,
@@ -104,17 +114,11 @@ class _CustomEditTextState extends State<CustomEditText> {
               : null,
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14.h),
-            borderSide: BorderSide(
-              color: Colors.red,
-              width: 1.h,
-            ),
+            borderSide: BorderSide(color: Colors.red, width: 1.h),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14.h),
-            borderSide: BorderSide(
-              color: Colors.red,
-              width: 1.h,
-            ),
+            borderSide: BorderSide(color: Colors.red, width: 1.h),
           ),
         ),
       ),
