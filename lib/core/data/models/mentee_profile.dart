@@ -1,150 +1,97 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Defines the structure for a mentee's profile document.
-///
-/// This model includes fields for personal details, professional status,
-/// and mentorship-specific data, designed to be easily serialized to and
-/// deserialized from Firestore documents.
 class MenteeProfile {
-  // --- Core Metadata ---
-
-  /// The unique ID of the profile document, typically matching the user's UID.
   final String id;
-
-  /// The mentee's preferred full name.
   final String fullName;
-
-  /// Timestamp of when the profile was created.
   final DateTime joinDate;
+  final String profileImageUrl;
 
-  // --- Personal & Professional Details ---
+  // --- Fields from your Figma Design ---
+  final String bio; // The "About" section
+  final List<String>
+      skillsToLearn; // The tags on top of the image (UI/UX, Frontend)
+  final List<String>
+      targetMentors; // "I'm looking for" (Software Engineer, IT Mentor)
+  final String budget; // "My budget is" (PHP200/hr)
+  final List<String> goals; // "Goals" (Career Development, Long-term)
+  final String notes; // "Notes" section
 
-  /// The mentee's primary mentoring goal.
-  final String primaryGoal;
-
-  /// The mentee's current job title or student status.
-  final String currentRole;
-
-  /// The industry or domain the mentee is currently in or interested in.
-  final String industryOfInterest;
-
-  // --- Mentoring Specifics ---
-
-  /// A list of specific skills or topics the mentee is looking to learn.
-  final List<String> skillsToLearn;
-
-  /// A string describing general availability (e.g., "Evenings (Tues/Thurs)").
-  final String availability;
-
-  /// The ID of the mentor currently assigned to this mentee (can be null/empty).
-  final String? mentorId;
-
-  /// Status of the profile ('active', 'seeking_mentor', 'matched', 'on_hold').
-  final String status;
-
-  // --- Constructor ---
+  // --- Metadata ---
+  final String currentRole; // Useful for filtering (e.g. "Student")
+  final String status; // e.g. 'seeking_mentor'
 
   const MenteeProfile({
     required this.id,
     required this.fullName,
     required this.joinDate,
-    required this.primaryGoal,
-    required this.currentRole,
-    required this.industryOfInterest,
+    required this.profileImageUrl,
+    required this.bio,
     required this.skillsToLearn,
-    required this.availability,
-    this.mentorId,
+    required this.targetMentors,
+    required this.budget,
+    required this.goals,
+    required this.notes,
+    required this.currentRole,
     required this.status,
   });
 
-  // --- Factory for Creating an Empty/Initial Profile ---
-
-  /// Returns an initial MenteeProfile instance, useful for new user sign-up.
+  // --- Factory: Initial/Empty ---
   factory MenteeProfile.initial(String userId) {
     return MenteeProfile(
       id: userId,
       fullName: '',
       joinDate: DateTime.now(),
-      primaryGoal: 'Define your main mentoring goal',
-      currentRole: 'Unspecified',
-      industryOfInterest: 'Not set',
+      profileImageUrl: '',
+      bio: '',
       skillsToLearn: [],
-      availability: 'Please update your availability',
-      mentorId: null,
+      targetMentors: [],
+      budget: '',
+      goals: [],
+      notes: '',
+      currentRole: '',
       status: 'seeking_mentor',
     );
   }
 
-  // --- Serialization (to Firestore) ---
-
-  /// Converts this [MenteeProfile] instance into a map for storage in Firestore.
+  // --- Serialization: To Firestore ---
   Map<String, dynamic> toFirestore() {
     return {
       'fullName': fullName,
       'joinDate': Timestamp.fromDate(joinDate),
-      'primaryGoal': primaryGoal,
-      'currentRole': currentRole,
-      'industryOfInterest': industryOfInterest,
+      'profileImageUrl': profileImageUrl,
+      'bio': bio,
       'skillsToLearn': skillsToLearn,
-      'availability': availability,
-      'mentorId': mentorId,
+      'targetMentors': targetMentors,
+      'budget': budget,
+      'goals': goals,
+      'notes': notes,
+      'currentRole': currentRole,
       'status': status,
     };
   }
 
-  // --- Deserialization (from Firestore) ---
-
-  /// Creates a [MenteeProfile] instance from a Firestore document snapshot.
+  // --- Deserialization: From Firestore ---
   factory MenteeProfile.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-  ) {
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data();
-    if (data == null) {
-      throw Exception("Document data was null for ID: ${snapshot.id}");
-    }
-
-    // Safely cast Timestamp to DateTime
-    final joinTimestamp = data['joinDate'] as Timestamp?;
-    final joinDateTime = joinTimestamp?.toDate() ?? DateTime.now();
+    if (data == null) throw Exception("Document data was null");
 
     return MenteeProfile(
-      id: snapshot.id, // Use the document ID for the profile ID
-      fullName: data['fullName'] as String? ?? '',
-      joinDate: joinDateTime,
-      primaryGoal: data['primaryGoal'] as String? ?? '',
-      currentRole: data['currentRole'] as String? ?? '',
-      industryOfInterest: data['industryOfInterest'] as String? ?? '',
+      id: snapshot.id,
+      fullName: data['fullName'] ?? '',
+      joinDate: (data['joinDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      profileImageUrl: data['profileImageUrl'] ?? '',
+      bio: data['bio'] ?? '',
       skillsToLearn: List<String>.from(data['skillsToLearn'] ?? []),
-      availability: data['availability'] as String? ?? 'N/A',
-      mentorId: data['mentorId'] as String?,
-      status: data['status'] as String? ?? 'seeking_mentor',
-    );
-  }
-
-  // --- Utility ---
-
-  /// Creates a copy of this MenteeProfile with optional new values.
-  MenteeProfile copyWith({
-    String? fullName,
-    String? primaryGoal,
-    String? currentRole,
-    String? industryOfInterest,
-    List<String>? skillsToLearn,
-    String? availability,
-    String? mentorId,
-    String? status,
-  }) {
-    return MenteeProfile(
-      id: id,
-      fullName: fullName ?? this.fullName,
-      joinDate: joinDate, // Join date is typically immutable after creation
-      primaryGoal: primaryGoal ?? this.primaryGoal,
-      currentRole: currentRole ?? this.currentRole,
-      industryOfInterest: industryOfInterest ?? this.industryOfInterest,
-      skillsToLearn: skillsToLearn ?? this.skillsToLearn,
-      availability: availability ?? this.availability,
-      mentorId: mentorId ?? this.mentorId,
-      status: status ?? this.status,
+      targetMentors: List<String>.from(data['targetMentors'] ?? []),
+      budget: data['budget'] ?? '',
+      goals: List<String>.from(data['goals'] ?? []),
+      notes: data['notes'] ?? '',
+      currentRole: data['currentRole'] ?? '',
+      status: data['status'] ?? 'seeking_mentor',
     );
   }
 }
+
+  // Update factory initial and fromFirestore accordingly...
+  // (I can provide the full file if you need it, but these are the key fields)

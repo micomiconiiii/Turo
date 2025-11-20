@@ -22,7 +22,7 @@ class ProfileDetailCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTheme.body3.copyWith(
+        style: AppTheme.montserratChip.copyWith(
           color: AppTheme.white,
           fontWeight: FontWeight.w600,
         ),
@@ -101,7 +101,7 @@ class ProfileDetailCard extends StatelessWidget {
             padding: const EdgeInsets.only(left: 0, bottom: 8),
             child: Text(
               mentor.budget, // This is the price (e.g., PHP200/hr)
-              style: AppTheme.body3.copyWith(
+              style: AppTheme.montserratChip.copyWith(
                 // FIX: Updated color to Black (3D3D3D)
                 color: _kDarkGreyText,
                 fontWeight: FontWeight.w600,

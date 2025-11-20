@@ -11,6 +11,9 @@ class AppTheme {
   static const Color black = Color(0xFF3D3D3D);
   static const Color chipGreen = Color(0xFF2C6A64);
 
+  // --- Fustat Styles ---
+
+  // 1. Main Header ("TURO")
   static const TextStyle fustatHeader = TextStyle(
     fontFamily: 'Fustat',
     fontWeight: FontWeight.w800,
@@ -18,34 +21,18 @@ class AppTheme {
     color: black,
   );
 
-  static const TextStyle fustatSubHeader = TextStyle(
-    fontFamily: 'Fustat',
-    fontWeight: FontWeight.w700,
-    fontSize: 20,
-    color: black,
-  );
-
-  static const TextStyle body1 = TextStyle(
-    fontFamily: 'Fustat',
-    fontWeight: FontWeight.w400,
-    fontSize: 16,
-    color: black,
-  );
-
-  static const TextStyle body2 = TextStyle(
-    fontFamily: 'Fustat',
-    fontWeight: FontWeight.w400,
-    fontSize: 14,
-    color: black,
-  );
-
+  // 2. Body Chips (Goals, Looking For) -> Fustat 12
+  // ADDED THIS SECTION
   static const TextStyle body3 = TextStyle(
     fontFamily: 'Fustat',
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     fontSize: 12,
     color: black,
   );
 
+  // --- Montserrat Styles ---
+
+  // 3. Name on Image
   static const TextStyle montserratName = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w600, // SemiBold
@@ -54,17 +41,34 @@ class AppTheme {
     letterSpacing: 1.2,
   );
 
+  // 4. Section Titles (About, Goals, etc.) -> SemiBold 20
   static const TextStyle montserratSectionTitle = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w600, // SemiBold
     fontSize: 20,
-    color: primary,
+    color: black,
+  );
+
+  // 5. Details (Bio, Notes, Budget Value) -> Regular 15
+  static const TextStyle montserratBody = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w400, // Regular
+    fontSize: 15,
+    color: secondary,
+  );
+
+  // 6. Header Chip Text (Image Overlay) -> Regular 12
+  static const TextStyle montserratChip = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w400, // Regular
+    fontSize: 12,
+    color: white,
   );
 
   static ThemeData get themeData {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Fustat',
+      fontFamily: 'Montserrat', // Set Default Font
       scaffoldBackgroundColor: white,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
@@ -79,10 +83,11 @@ class AppTheme {
       ),
       textTheme: const TextTheme(
         headlineLarge: fustatHeader,
-        titleMedium: fustatSubHeader,
-        bodyLarge: body1,
-        bodyMedium: body2,
-        bodySmall: body3,
+        titleMedium: montserratSectionTitle,
+        bodyLarge: montserratBody,
+        bodyMedium: montserratBody,
+        // You can map bodySmall to montserratChip or body3 depending on preference
+        bodySmall: montserratChip,
       ),
     );
   }
