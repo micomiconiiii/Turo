@@ -9,13 +9,13 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "skipLibCheck": true,
-    "types": [
-      "mocha"
-    ]
+    "skipLibCheck": true
   },
   "compileOnSave": true,
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/test.ts"
   ]
 }

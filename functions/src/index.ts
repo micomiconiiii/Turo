@@ -5,12 +5,14 @@ import {defineString} from "firebase-functions/params";
 import admin, { auth, turoDb } from "./services/firebase";
 import { randomUUID } from 'crypto';
 
+// Import user management functions
+import { onAuthUserDeleted } from "./admin/user_management";
+
 // Define email and password as environment variables
 const emailProvider = defineString("EMAIL");
 const passwordProvider = defineString("PASSWORD");
 
-console.log("Email used:", emailProvider.value());
-console.log("Password length:", passwordProvider.value()?.length);
+// Note: Params are logged at runtime, not during deployment
 
 // Define interfaces for callable function data
 interface RequestEmailOTPData {
@@ -458,3 +460,6 @@ export const saveUserProfile = onCall(
     );
   }
 });
+
+// Export user management functions
+export const cleanupUserAccount = onAuthUserDeleted;

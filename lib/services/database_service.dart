@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:turo/models/user_model.dart';
 import 'package:turo/models/user_detail_model.dart';
+import 'package:turo/models/mentor_verification_model.dart';
 
 /// Service class for managing database operations with Firestore.
 ///
@@ -105,5 +106,60 @@ class DatabaseService {
   /// [userId] - The unique identifier for the user
   Future<DocumentSnapshot> getUserDetails(String userId) async {
     return _db.collection(_userDetailsCollection).doc(userId).get();
+  }
+
+  /// Retrieves mentor verification document (PII layer).
+  Future<MentorVerificationModel?> getMentorVerification(String userId) async {
+    final doc = await _db
+        .collection(_mentorVerificationsCollection)
+        .doc(userId)
+        .get();
+    if (!doc.exists) return null;
+    return MentorVerificationModel.fromFirestore(doc);
+  }
+
+  /// Creates or updates mentor verification data (PII layer).
+  Future<void> upsertMentorVerification(MentorVerificationModel model) async {
+    await _db
+        .collection(_mentorVerificationsCollection)
+        .doc(model.userId)
+        .set(model.toFirestore(), SetOptions(merge: true));
+  }
+
+  /// Approves mentor verification:
+  /// 1. Update mentor_verifications/{uid}.status = 'approved'
+  /// 2. Update users/{uid}: ensure roles includes 'mentor', set is_verified=true
+  Future<void> approveMentorVerification(String userId) async {
+    final userRef = _db.collection(_usersCollection).doc(userId);
+    final verificationRef = _db
+        .collection(_mentorVerificationsCollection)
+        .doc(userId);
+
+    await _db.runTransaction((txn) async {
+      final verificationSnap = await txn.get(verificationRef);
+      if (!verificationSnap.exists) {
+        throw StateError('Verification document not found for uid=$userId');
+      }
+
+      // Update verification status
+      txn.update(verificationRef, {
+        'status': 'approved',
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      final userSnap = await txn.get(userRef);
+      if (!userSnap.exists) {
+        throw StateError('User document missing for uid=$userId');
+      }
+      final data = userSnap.data() as Map<String, dynamic>;
+      final roles = List<String>.from(data['roles'] ?? []);
+      if (!roles.contains('mentor')) roles.add('mentor');
+
+      txn.update(userRef, {
+        'roles': roles,
+        'is_verified': true,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    });
   }
 }
