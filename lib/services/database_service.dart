@@ -1,17 +1,15 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:turo/models/user_model.dart';
-import 'package:turo/models/user_detail_model.dart';
-import 'package:turo/models/mentor_verification_model.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart'; // For XFile
+import '../models/user_model.dart';
+import '../models/user_detail_model.dart';
+import '../models/mentor_verification_model.dart';
 
 /// Service class for managing database operations with Firestore.
-///
-/// This service implements the new 3-Layer Schema:
-/// - Layer 1: users (public hub with display info and nested profiles)
-/// - Layer 2: user_details (private data like email, birthdate, address)
-/// - Layer 3: mentor_verifications (verification documents for mentors)
-///
-/// Uses batched writes to ensure atomicity when writing multiple documents.
+/// Implements the 3-Layer Schema: Public (users), Private (user_details), Admin (mentor_verifications).
 class DatabaseService {
   // Private instance of Firestore
   final FirebaseFirestore _db = FirebaseFirestore.instanceFor(
@@ -19,27 +17,19 @@ class DatabaseService {
     databaseId: 'turo',
   );
 
-  // Collection name constants for the new 3-Layer Schema
+  // Collection name constants
   final String _usersCollection = "users";
   final String _userDetailsCollection = "user_details";
-  // ignore: unused_field
   final String _mentorVerificationsCollection = "mentor_verifications";
 
   /// Creates initial user documents during signup.
-  ///
-  /// This method atomically creates both the public user document and
-  /// the private user_details document using a batched write.
-  ///
-  /// [uid] - The unique identifier for the user (Firebase Auth UID)
-  /// [email] - The user's email address
-  /// [role] - The user's role ("mentee" or "mentor")
-  ///
-  /// Throws [FirebaseException] if the batch write fails.
+  /// Shared by both Mentors and Mentees.
   Future<void> createInitialUser(String uid, String email, String role) async {
     final WriteBatch batch = _db.batch();
 
-    final userDoc = _db.collection('users').doc(uid);
+    final userDoc = _db.collection(_usersCollection).doc(uid);
     final Map<String, dynamic> userData = {
+      'user_id': uid, // <--- ADDED: Standardize ID field
       'display_name': email.split('@')[0],
       'roles': [role],
       'is_verified': false,
@@ -48,8 +38,9 @@ class DatabaseService {
     };
     batch.set(userDoc, userData);
 
-    final userDetailDoc = _db.collection('user_details').doc(uid);
+    final userDetailDoc = _db.collection(_userDetailsCollection).doc(uid);
     final Map<String, dynamic> userDetailData = {
+      'user_id': uid, // <--- ADDED: Standardize ID field
       'email': email,
       'created_at': FieldValue.serverTimestamp(),
     };
@@ -58,57 +49,135 @@ class DatabaseService {
     await batch.commit();
   }
 
-  /// Updates user data after mentee onboarding completion.
-  ///
-  /// This method atomically updates both the public user document (with display
-  /// info and nested mentee_profile) and the private user_details document
-  /// (with birthdate and address) using a batched write.
-  ///
-  /// [uid] - The unique identifier for the user
-  /// [user] - The UserModel containing display info and nested mentee profile
-  /// [userDetail] - The UserDetailModel containing private data
-  ///
-  /// Throws [FirebaseException] if the batch write fails.
+  /// Updates the PUBLIC user document for Mentor Onboarding (Layer 1).
+  Future<void> updateUserPublic({
+    required String uid,
+    required String bio,
+    required bool isVerified,
+    required List<String> roles,
+    required Map<String, dynamic> mentorProfile,
+  }) async {
+    try {
+      final userRef = _db.collection(_usersCollection).doc(uid);
+      final userSnap = await userRef.get();
+      final data = userSnap.data() ?? {};
+
+      // Merge 'mentor' into roles array if missing
+      final List<String> updatedRoles = List<String>.from(data['roles'] ?? []);
+      if (!updatedRoles.contains('mentor')) updatedRoles.add('mentor');
+
+      await userRef.set({
+        'user_id': uid, // <--- ADDED
+        'bio': bio,
+        'is_verified': isVerified,
+        'roles': updatedRoles,
+        'mentor_profile': mentorProfile,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Updates the PRIVATE user_details document for Mentor Onboarding (Layer 2).
+  Future<void> updateUserDetails({
+    required String uid,
+    required String fullName,
+    required DateTime birthdate,
+    required String address,
+  }) async {
+    try {
+      final userDetailRef = _db.collection(_userDetailsCollection).doc(uid);
+      await userDetailRef.set({
+        'user_id': uid, // <--- ADDED
+        'full_name': fullName,
+        'birthdate': Timestamp.fromDate(birthdate),
+        'address': address,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Creates a MENTOR VERIFICATION document (Layer 3 - Admin).
+  /// Also handles the File Upload to Storage.
+  Future<void> createMentorVerification({
+    required String uid,
+    required String institutionName,
+    required String jobTitle,
+    required XFile? idFile,
+    required XFile? selfieFile,
+  }) async {
+    try {
+      if (idFile == null || selfieFile == null) {
+        throw ArgumentError('Both idFile and selfieFile must be provided');
+      }
+
+      final storage = FirebaseStorage.instance;
+
+      // 1. Upload ID file
+      final idRef = storage.ref('verifications/$uid/id_card');
+      final idBytes = await idFile.readAsBytes();
+      final idUpload = await idRef.putData(
+        idBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final idUrl = await idUpload.ref.getDownloadURL();
+
+      // 2. Upload Selfie file
+      final selfieRef = storage.ref('verifications/$uid/selfie');
+      final selfieBytes = await selfieFile.readAsBytes();
+      final selfieUpload = await selfieRef.putData(
+        selfieBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final selfieUrl = await selfieUpload.ref.getDownloadURL();
+
+      // 3. Create Verification Doc
+      final verificationRef = _db
+          .collection(_mentorVerificationsCollection)
+          .doc(uid);
+      await verificationRef.set({
+        'user_id': uid, // <--- ADDED
+        'institution_name': institutionName,
+        'job_title': jobTitle,
+        'id_url': idUrl,
+        'selfie_url': selfieUrl,
+        'status': 'pending',
+        'submitted_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ------------------- EXISTING HELPER METHODS -------------------
+
   Future<void> updateMenteeOnboardingData(
     String uid,
     UserModel user,
     UserDetailModel userDetail,
   ) async {
-    // Create a batched write for atomicity
     final WriteBatch batch = _db.batch();
 
-    // Update the public users document
+    // Mentee models ALREADY have user_id in toFirestore(), so this is safe.
     batch.update(_db.collection(_usersCollection).doc(uid), user.toFirestore());
-
-    // Update the private user_details document
     batch.update(
       _db.collection(_userDetailsCollection).doc(uid),
       userDetail.toFirestore(),
     );
-
-    // Commit the batch (all or nothing)
     await batch.commit();
   }
 
-  /// Retrieves a user document from the users collection.
-  ///
-  /// Returns the DocumentSnapshot containing public user data.
-  ///
-  /// [userId] - The unique identifier for the user
   Future<DocumentSnapshot> getUser(String userId) async {
     return _db.collection(_usersCollection).doc(userId).get();
   }
 
-  /// Retrieves a user_details document.
-  ///
-  /// Returns the DocumentSnapshot containing private user data.
-  ///
-  /// [userId] - The unique identifier for the user
   Future<DocumentSnapshot> getUserDetails(String userId) async {
     return _db.collection(_userDetailsCollection).doc(userId).get();
   }
 
-  /// Retrieves mentor verification document (PII layer).
   Future<MentorVerificationModel?> getMentorVerification(String userId) async {
     final doc = await _db
         .collection(_mentorVerificationsCollection)
@@ -118,7 +187,6 @@ class DatabaseService {
     return MentorVerificationModel.fromFirestore(doc);
   }
 
-  /// Creates or updates mentor verification data (PII layer).
   Future<void> upsertMentorVerification(MentorVerificationModel model) async {
     await _db
         .collection(_mentorVerificationsCollection)
@@ -126,9 +194,6 @@ class DatabaseService {
         .set(model.toFirestore(), SetOptions(merge: true));
   }
 
-  /// Approves mentor verification:
-  /// 1. Update mentor_verifications/{uid}.status = 'approved'
-  /// 2. Update users/{uid}: ensure roles includes 'mentor', set is_verified=true
   Future<void> approveMentorVerification(String userId) async {
     final userRef = _db.collection(_usersCollection).doc(userId);
     final verificationRef = _db
@@ -137,20 +202,17 @@ class DatabaseService {
 
     await _db.runTransaction((txn) async {
       final verificationSnap = await txn.get(verificationRef);
-      if (!verificationSnap.exists) {
-        throw StateError('Verification document not found for uid=$userId');
-      }
+      if (!verificationSnap.exists)
+        throw StateError('Verification document not found');
 
-      // Update verification status
       txn.update(verificationRef, {
         'status': 'approved',
         'updated_at': FieldValue.serverTimestamp(),
       });
 
       final userSnap = await txn.get(userRef);
-      if (!userSnap.exists) {
-        throw StateError('User document missing for uid=$userId');
-      }
+      if (!userSnap.exists) throw StateError('User document missing');
+
       final data = userSnap.data() as Map<String, dynamic>;
       final roles = List<String>.from(data['roles'] ?? []);
       if (!roles.contains('mentor')) roles.add('mentor');

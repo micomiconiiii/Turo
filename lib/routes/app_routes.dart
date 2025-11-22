@@ -2,25 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
+
+// --- NAVIGATION & SPLASH ---
 import '../presentation/app_navigation_screen/app_navigation_screen.dart';
-import '../presentation/mentor_registration_screen/institutional_verification_screen.dart';
-import '../presentation/mentor_registration_screen/otp_verification_screen.dart';
-import '../presentation/terms_and_conditions_screen/terms_and_conditions_screen.dart';
 import '../presentation/splash_screen/splash_screen.dart';
+
+// --- AUTH & LEGAL ---
 import '../presentation/login_screen/login_screen.dart';
 import '../presentation/user_registration_screen/user_registration_screen.dart';
+import '../presentation/terms_and_conditions_screen/terms_and_conditions_screen.dart';
+
+// --- MENTOR REGISTRATION (UPDATED) ---
+// Note: Ensure these paths match your actual folder structure.
+// If your folder is named 'mentor_registration', remove '_screen' from the path below.
+import '../presentation/mentor_registration_screen/mentor_registration_page.dart';
+import '../presentation/mentor_registration_screen/providers/mentor_registration_provider.dart';
+import '../presentation/mentor_registration_screen/otp_verification_screen.dart';
+
+// --- MENTEE ONBOARDING ---
 import '../presentation/mentee_onboarding/pages/mentee_onboarding_page.dart';
 import '../presentation/mentee_onboarding/providers/mentee_onboarding_provider.dart';
 
 class AppRoutes {
   static const String mentorRegistrationScreen = '/mentor_registration_screen';
-  static const String idUploadScreen = '/id_upload_screen';
-  static const String institutionalVerificationScreen =
-      '/institutional_verification_screen';
   static const String appNavigationScreen = '/app_navigation_screen';
-  static const String credentialsAchievementsScreen =
-      '/credentials_achievements_screen';
-  static const String selfieVerificationScreen = '/selfie_verification_screen';
   static const String emailVerificationScreen = '/email_verification_screen';
   static const String termsAndConditionsScreen = '/terms_and_conditions_screen';
   static const String splashScreen = '/splash_screen';
@@ -30,16 +35,13 @@ class AppRoutes {
   static const String initialRoute = '/';
 
   static Map<String, WidgetBuilder> get routes => {
-    mentorRegistrationScreen: (context) {
-      final args =
-          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      final user = args['user'] as UserModel;
-      final userDetail = args['userDetail'] as UserDetailModel;
-      return InstitutionalVerificationScreen(
-        user: user,
-        userDetail: userDetail,
-      );
-    },
+    // --- UPDATED MENTOR ROUTE ---
+    mentorRegistrationScreen: (context) => ChangeNotifierProvider(
+      create: (_) => MentorRegistrationProvider(),
+      child: const MentorRegistrationPage(),
+    ),
+
+    // --- EXISTING ROUTES ---
     emailVerificationScreen: (context) {
       final args =
           ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -47,8 +49,6 @@ class AppRoutes {
         email: args['email'] as String,
         user: args['user'] as UserModel?,
         userDetail: args['userDetail'] as UserDetailModel?,
-        isInstitutional: args['isInstitutional'] as bool? ?? false,
-        institutionalEmail: args['institutionalEmail'] as String?,
         password: args['password'] as String?,
         role: args['role'] as String?,
       );

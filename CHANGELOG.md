@@ -367,3 +367,39 @@ Steps include:
 - **New Models**: 2 (MenteeProfileModel, UserDetailModel enhanced)
 - **New Services**: 1 (CustomFirebaseOtpService)
 - **Cloud Functions**: 3 (requestEmailOTP, verifyEmailOTP, resendEmailOTP)
+
+
+--------------------------------------------------------------------------------
+
+
+# Changelog - [Current Date] - The "Architectural Alignment" Update
+
+## 🚨 CRITICAL BREAKING CHANGES
+This update fundamentally changes how data is saved and how the app runs on Web.
+**ALL TEAM MEMBERS MUST READ THIS BEFORE MERGING.**
+
+### 1. Architecture Shift: Transactional to State-Based
+- **Old Way:** Mentor Registration saved data to Firebase on every "Next" click.
+- **New Way:** Data is held in `MentorRegistrationProvider` (RAM) and only saved to Firebase on the final "Submit".
+- **Impact:** Prevents "400/404" errors and orphaned documents.
+
+### 2. Web Compatibility (Storage)
+- **Removed:** `dart:io` (File) dependencies in upload logic.
+- **Added:** `XFile` and `readAsBytes()` + `putData()` for Firebase Storage.
+- **Why:** The app now works on Chrome without crashing on `Platform._operatingSystem`.
+
+### 3. Database Standardization (3-Layer Schema)
+- **Standardized:** The `user_id` field is now explicitly saved in ALL three collections:
+  1. `users` (Public Profile)
+  2. `user_details` (Private PII)
+  3. `mentor_verifications` (Admin Layer)
+- **Fixed:** `DatabaseService` now handles atomic writes for verification documents + file uploads.
+
+### 4. Folder Structure Refactor
+- **Renamed/Moved:** `mentor_registration_screen` -> `mentor_registration_page.dart` (The Shell).
+- **New Steps:** Individual screens are now lightweight widgets (Step 1-5) inside `lib/presentation/mentor_registration/`.
+
+## ✅ Action Required for Team
+1. **DO NOT** overwrite `lib/services/database_service.dart` with your old version.
+2. **DO NOT** change `File` back to `dart:io` in any service.
+3. **Run** `flutter pub get` immediately after pulling (Dependencies updated).

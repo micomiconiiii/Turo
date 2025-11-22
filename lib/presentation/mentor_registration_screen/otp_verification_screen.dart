@@ -7,14 +7,11 @@ import '../../services/custom_firebase_otp_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
 import '../../widgets/custom_button.dart';
-import './id_upload_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
   final UserModel? user; // Optional in deferred signup flow
   final UserDetailModel? userDetail; // Optional in deferred signup flow
-  final String? institutionalEmail;
-  final bool isInstitutional; // true when verifying institutional email
   final String? password; // Provided only in deferred signup path
   final String? role; // Provided only in deferred signup path
 
@@ -23,8 +20,6 @@ class OtpVerificationScreen extends StatefulWidget {
     required this.email,
     this.user,
     this.userDetail,
-    this.institutionalEmail,
-    this.isInstitutional = false,
     this.password,
     this.role,
   });
@@ -70,85 +65,54 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           ),
         );
 
-        // Check if this is institutional verification flow
-        if (widget.isInstitutional) {
-          // Institutional mentor email verification continues to ID upload
-          if (widget.user == null || widget.userDetail == null) {
-            throw Exception('Missing user data for institutional flow');
-          }
-          Navigator.push(
+        // Deferred signup: User is already authenticated via custom token
+        // Now create Firestore documents if they don't exist
+        final uid = _authService.currentUser?.uid;
+        if (uid == null) throw Exception('User not authenticated after OTP');
+
+        final userDoc = await _databaseService.getUser(uid);
+
+        // If user document doesn't exist, create initial documents
+        if (!userDoc.exists && widget.role != null) {
+          await _databaseService.createInitialUser(
+            uid,
+            widget.email,
+            widget.role!,
+          );
+        }
+
+        // Re-fetch to get the user data
+        final refreshedUserDoc = await _databaseService.getUser(uid);
+        if (!refreshedUserDoc.exists)
+          throw Exception('User document missing after creation');
+        final data = refreshedUserDoc.data() as Map<String, dynamic>;
+        final roles = List<String>.from(data['roles'] ?? []);
+
+        // Prepare user models if absent (deferred mentor path)
+        final preparedUser =
+            widget.user ??
+            UserModel(
+              userId: uid,
+              displayName: widget.email.split('@').first,
+              roles: roles,
+            );
+        if (!mounted) return;
+        if (roles.contains('mentor')) {
+          Navigator.pushReplacementNamed(
             context,
-            MaterialPageRoute(
-              builder: (context) => IdUploadScreen(
-                user: widget.user!,
-                userDetail: widget.userDetail!,
-                institutionalEmail: widget.email,
-              ),
-            ),
+            AppRoutes.mentorRegistrationScreen,
+            arguments: {'uid': preparedUser.userId},
+          );
+        } else if (roles.contains('mentee')) {
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.menteeOnboardingPage,
           );
         } else {
-          // Deferred signup: User is already authenticated via custom token
-          // Now create Firestore documents if they don't exist
-          final uid = _authService.currentUser?.uid;
-          if (uid == null) throw Exception('User not authenticated after OTP');
-
-          final userDoc = await _databaseService.getUser(uid);
-
-          // If user document doesn't exist, create initial documents
-          if (!userDoc.exists && widget.role != null) {
-            await _databaseService.createInitialUser(
-              uid,
-              widget.email,
-              widget.role!,
-            );
-          }
-
-          // Re-fetch to get the user data
-          final refreshedUserDoc = await _databaseService.getUser(uid);
-          if (!refreshedUserDoc.exists)
-            throw Exception('User document missing after creation');
-          final data = refreshedUserDoc.data() as Map<String, dynamic>;
-          final roles = List<String>.from(data['roles'] ?? []);
-
-          // Prepare user models if absent (deferred mentor path)
-          final preparedUser =
-              widget.user ??
-              UserModel(
-                userId: uid,
-                displayName: widget.email.split('@').first,
-                roles: roles,
-              );
-          final preparedUserDetail =
-              widget.userDetail ??
-              UserDetailModel(
-                userId: uid,
-                email: widget.email,
-                fullName: '',
-                birthdate: DateTime.now(),
-                address: '',
-                createdAt: DateTime.now(),
-              );
-          if (!mounted) return;
-          if (roles.contains('mentor')) {
-            Navigator.pushReplacementNamed(
-              context,
-              AppRoutes.mentorRegistrationScreen,
-              arguments: {
-                'user': preparedUser,
-                'userDetail': preparedUserDetail,
-              },
-            );
-          } else if (roles.contains('mentee')) {
-            Navigator.pushReplacementNamed(
-              context,
-              AppRoutes.menteeOnboardingPage,
-            );
-          } else {
-            Navigator.pushReplacementNamed(
-              context,
-              AppRoutes.appNavigationScreen,
-            );
-          }
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.appNavigationScreen,
+          );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
