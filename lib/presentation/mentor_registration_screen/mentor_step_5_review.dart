@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // --- FIXED IMPORTS (Using absolute paths) ---
 import '../../../services/database_service.dart';
 import 'providers/mentor_registration_provider.dart'; // Keep relative if in same folder
+import 'mentor_step_4_credentials.dart' show Credential;
 
 class MentorStep5Review extends StatefulWidget {
   const MentorStep5Review({super.key});
@@ -133,6 +134,42 @@ class _MentorStep5ReviewState extends State<MentorStep5Review> {
     );
   }
 
+  Widget _buildCredentialsList(String label, List<Credential> credentials) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C6A64),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (credentials.isEmpty)
+            const Text('No credentials provided',
+                style: TextStyle(fontStyle: FontStyle.italic))
+          else
+            ...credentials.map((cred) {
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.only(top: 8),
+                child: ListTile(
+                  title: Text(cred.title),
+                  subtitle: Text(
+                      'Year: ${cred.year}\nFile: ${cred.certificateFileName ?? 'None'}'),
+                  dense: true,
+                ),
+              );
+            }).toList(),
+          const Divider(height: 24),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MentorRegistrationProvider>(
@@ -167,12 +204,14 @@ class _MentorStep5ReviewState extends State<MentorStep5Review> {
               _buildReviewField('Bio', provider.bio),
               _buildReviewField('Address', addressParts),
               _buildReviewField('Institution', provider.institutionName),
+              _buildReviewField('Institutional Email', provider.institutionEmail),
               _buildReviewField('Position', provider.jobTitle),
               _buildReviewField(
                 'Hourly Rate',
                 'PHP ${provider.hourlyRate?.toStringAsFixed(2) ?? "0.00"}',
               ),
               _buildReviewField('Expertise', provider.expertise.join(', ')),
+              _buildCredentialsList('Credentials', provider.credentials),
               _buildImagePreview('Government ID', provider.idFile),
               _buildImagePreview('Selfie', provider.selfieFile),
               const SizedBox(height: 32),

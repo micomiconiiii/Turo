@@ -44,11 +44,26 @@ class _MentorStep2InstitutionalDetailsState
     if (value == null || value.isEmpty) {
       return 'Please enter your institutional email.';
     }
+    // General email format validation
     final emailRegex = RegExp(
-      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+$",
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
     );
     if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email address.';
+    }
+
+    // Block common public email providers
+    final domain = value.split('@').last.toLowerCase();
+    final blockedDomains = [
+      'gmail.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'aol.com',
+      'icloud.com',
+    ];
+    if (blockedDomains.contains(domain)) {
+      return 'Please use an institutional email, not a personal one (e.g., Gmail, Yahoo).';
     }
     return null;
   }

@@ -1,6 +1,21 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'providers/mentor_registration_provider.dart';
+
+class Credential {
+  String title;
+  String year;
+  String? certificateFileName;
+  Uint8List? certificateBytes;
+
+  Credential(
+      {required this.title,
+      required this.year,
+      this.certificateFileName,
+      this.certificateBytes});
+}
 
 class MentorStep4Credentials extends StatefulWidget {
   const MentorStep4Credentials({super.key});
@@ -88,6 +103,102 @@ class _MentorStep4CredentialsState extends State<MentorStep4Credentials> {
     provider.nextPage();
   }
 
+  void _removeCredential(int index) {
+    final provider = context.read<MentorRegistrationProvider>();
+    provider.removeCredential(index);
+  }
+
+  Future<void> _showAddCredentialDialog() async {
+    final provider = context.read<MentorRegistrationProvider>();
+    final titleController = TextEditingController();
+    final yearController = TextEditingController();
+    FilePickerResult? filePickerResult;
+
+    final result = await showDialog<Credential?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Credential'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'Title'),
+                    ),
+                    TextField(
+                      controller: yearController,
+                      decoration: const InputDecoration(labelText: 'Year Achieved'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(
+                              type: FileType.custom,
+                              allowedExtensions: ['pdf', 'jpg', 'png'],
+                            );
+                            setState(() {
+                              filePickerResult = result;
+                            });
+                          },
+                          child: const Text('Upload Certificate'),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            filePickerResult?.files.single.name ?? 'No file selected',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (titleController.text.isNotEmpty && yearController.text.isNotEmpty) {
+                  final newCredential = Credential(
+                    title: titleController.text,
+                    year: yearController.text,
+                    certificateFileName: filePickerResult?.files.single.name,
+                    certificateBytes: filePickerResult?.files.single.bytes,
+                  );
+                  Navigator.of(context).pop(newCredential);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Title and Year are required.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      provider.addCredential(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MentorRegistrationProvider>(
@@ -161,6 +272,46 @@ class _MentorStep4CredentialsState extends State<MentorStep4Credentials> {
                           _addExpertiseTag(_expertiseController.text),
                     ),
                   ],
+                ),
+                const SizedBox(height: 32),
+
+                // CREDENTIALS SECTION
+                const Text(
+                  'Credentials:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C6A64),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (provider.credentials.isEmpty)
+                  const Text('No credentials added yet.')
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: provider.credentials.length,
+                    itemBuilder: (context, index) {
+                      final cred = provider.credentials[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(cred.title),
+                          subtitle: Text(
+                              'Year: ${cred.year}\nFile: ${cred.certificateFileName ?? 'None'}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _removeCredential(index),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  icon: const Icon(Icons.add, color: Color(0xFF2C6A64)),
+                  label: const Text('Add Credential', style: TextStyle(color: Color(0xFF2C6A64))),
+                  onPressed: _showAddCredentialDialog,
                 ),
                 const SizedBox(height: 32),
 
