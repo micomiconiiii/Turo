@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:turo/presentation/mentor_registration_screen/mentor_step_4_credentials.dart';
 import '../../../services/database_service.dart';
 
 class MentorRegistrationProvider extends ChangeNotifier {
@@ -28,6 +29,7 @@ class MentorRegistrationProvider extends ChangeNotifier {
   // Step 4: Expertise
   double? _hourlyRate;
   List<String> _expertise = [];
+  List<Credential> _credentials = [];
 
   // Navigation Logic
   final PageController pageController = PageController();
@@ -76,6 +78,7 @@ class MentorRegistrationProvider extends ChangeNotifier {
   XFile? get selfieFile => _selfieFile;
   double? get hourlyRate => _hourlyRate;
   List<String> get expertise => _expertise;
+  List<Credential> get credentials => _credentials;
 
   // Setters/Updaters
   void updatePersonalInfo({
@@ -126,6 +129,16 @@ class MentorRegistrationProvider extends ChangeNotifier {
   }) {
     _hourlyRate = hourlyRate;
     _expertise = expertise;
+    notifyListeners();
+  }
+
+  void addCredential(Credential credential) {
+    _credentials.add(credential);
+    notifyListeners();
+  }
+
+  void removeCredential(int index) {
+    _credentials.removeAt(index);
     notifyListeners();
   }
 
