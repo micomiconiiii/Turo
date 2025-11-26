@@ -14,7 +14,7 @@ dependencies:
   # UI/Assets
   flutter_svg: ^2.0.12
   cached_network_image: ^3.4.1 # For remote images
-  font_awesome_flutter: ^10.7.0 # For icons (Bell, User, Heart, X, etc.)
+  font_awesome_flutter: ^10.7.0 # For icons
   swipe_cards: ^2.0.0
   gradient_borders: ^1.0.2
 
@@ -35,13 +35,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  # REMOVED: device_preview was here previously
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/ # Ensure mico_abas.png is here!
+    - assets/images/
 
   fonts:
     - family: Fustat
