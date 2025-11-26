@@ -14,7 +14,7 @@ dependencies:
   # UI/Assets
   flutter_svg: ^2.0.12
   cached_network_image: ^3.4.1 # For remote images
-  font_awesome_flutter: ^10.7.0 # For icons
+  font_awesome_flutter: ^10.7.0 # For icons (Bell, User, Heart, X, etc.)
   swipe_cards: ^2.0.0
   gradient_borders: ^1.0.2
 
@@ -22,7 +22,7 @@ dependencies:
   provider: ^6.1.2
   connectivity_plus: ^6.1.0
   shared_preferences: ^2.3.3
-  web: any # For Flutter Web compatibility
+  web: any
 
   # Backend (Firebase Core)
   firebase_core: ^3.2.0
