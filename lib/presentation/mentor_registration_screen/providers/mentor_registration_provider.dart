@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:turo/presentation/mentor_registration_screen/mentor_step_4_credentials.dart';
 import '../../../services/database_service.dart';
-import 'package:turo/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class MentorRegistrationProvider extends ChangeNotifier {
@@ -60,16 +59,16 @@ class MentorRegistrationProvider extends ChangeNotifier {
   List<Credential> _credentials = [];
 
   // Step 4: Expertise
-  String _email = '';
-  String _password = '';
+  // String _email = '';
+  // String _password = '';
 
 
-
-  String _tagline = '';
-  List<String> _lookingFor = [];
-  String _budget = '';
-  List<String> _goals = [];
-  String _notes = '';
+  // modified to "final" to prevent reassignment errors
+  final _tagline = '';
+  final List<String> _lookingFor = [];
+  final String _budget = '';
+  final List<String> _goals = [];
+  final String _notes = '';
 
 
 

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:turo/presentation/auth_wrapper.dart';
 import 'firebase_options.dart';
 import 'core/app_export.dart';
 import 'package:turo/theme/mentor_app_theme.dart'; // Import theme

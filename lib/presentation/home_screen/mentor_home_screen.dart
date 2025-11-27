@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'package:turo/widgets/bottom_nav_bar.dart'; 
-import 'package:turo/core/data/services/mentee_matching_data_service.dart';
+import 'package:turo/services/mentee_matching_data_service.dart';
 import 'package:turo/theme/mentor_app_theme.dart';
 import 'package:turo/models/user_model.dart';
 

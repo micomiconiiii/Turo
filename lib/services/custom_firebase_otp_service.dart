@@ -23,16 +23,10 @@ class CustomFirebaseOtpService {
       email = email.toLowerCase().trim();
       otp = otp.trim();
 
-      print('📝 Sending OTP verification - Email: $email, OTP: $otp');
-
-
       final response = await callable.call<Map<String, dynamic>>({
         'email': email,
         'otp': otp,
       });
-
-      print('✅ Verification response: ${response.data}');
-    
 
       if (response.data['success'] == true && response.data['token'] != null) {
         await _auth.signInWithCustomToken(response.data['token']);
@@ -47,10 +41,8 @@ class CustomFirebaseOtpService {
     try {
       final callable = _functions.httpsCallable('requestEmailOTP');
       final response = await callable.call<Map<String, dynamic>>({'email': email});
-      print(response.data['message']);
       return response.data['success'] == true;
     } on FirebaseFunctionsException catch (e) {
-      print('Error resending email OTP: ${e.code} - ${e.message}');
       return false;
     }
   }

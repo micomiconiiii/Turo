@@ -22,7 +22,7 @@ import '../presentation/mentor_registration_screen/otp_verification_screen.dart'
 // --- MENTEE ONBOARDING ---
 import '../presentation/mentee_onboarding/pages/mentee_onboarding_page.dart';
 import '../presentation/mentee_onboarding/providers/mentee_onboarding_provider.dart';
-import '../presentation/home/mentor_home_screen.dart';
+import '../presentation/home_screen/mentor_home_screen.dart';
 
 class AppRoutes {
   static const String mentorRegistrationScreen = '/mentor_registration_screen';
