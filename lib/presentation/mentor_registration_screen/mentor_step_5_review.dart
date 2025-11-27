@@ -44,7 +44,7 @@ class _MentorStep5ReviewState extends State<MentorStep5Review> {
     setState(() => _isLoading = true);
 
     try {
-      await provider.submitApplication(uid, dbService);
+      await provider.submitApplication(dbService);
 
       if (mounted) {
         setState(() => _isLoading = false);

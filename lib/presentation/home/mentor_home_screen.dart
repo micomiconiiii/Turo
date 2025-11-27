@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'package:turo/widgets/bottom_nav_bar.dart'; 
-import 'package:turo/core/data/models/mentee_profile.dart';
 import 'package:turo/core/data/services/mentee_matching_data_service.dart';
-import 'package:turo/theme/mentor_app_theme.dart'; 
+import 'package:turo/theme/mentor_app_theme.dart';
+import 'package:turo/models/user_model.dart';
 
 const double _kBottomNavBarHeight = 130.0;
 
@@ -20,7 +20,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
   
   final List<SwipeItem> _swipeItems = [];
   MatchEngine? _matchEngine;
-  List<MenteeProfile> _mentees = [];
+  List<UserModel> _mentees = [];
   bool _isLoading = true;
   int _navIndex = 0;
 
@@ -76,12 +76,12 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     }
   }
 
-  void _onSwipe(MenteeProfile mentee, bool liked) {
+  void _onSwipe(UserModel mentee, bool liked) {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       _matchingService.recordSwipe(
         mentorId: user.uid, 
-        menteeId: mentee.id, 
+        menteeId: mentee.userId, // UPDATED: matched UserModel field
         isLike: liked
       );
     }
@@ -90,25 +90,49 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(liked
-            ? 'You accepted ${mentee.fullName}'
-            : 'You skipped ${mentee.fullName}'),
+            ? 'You accepted ${mentee.displayName}' // UPDATED: matched UserModel field
+            : 'You skipped ${mentee.displayName}'),
         duration: const Duration(milliseconds: 500),
         backgroundColor: liked ? AppTheme.chipGreen : Colors.grey,
       ),
     );
   }
 
+  // --- HELPER LOGIC FOR DATA EXTRACTION ---
+
+  // Helper to safely get interests from the nested profile
+  List<String> _getInterests(UserModel user) {
+    return user.menteeProfile?.interests ?? [];
+  }
+
+  // Helper to format the Budget Map into a String
+  String _getBudgetDisplay(UserModel user) {
+    final budgetMap = user.menteeProfile?.budget;
+    if (budgetMap == null || budgetMap.isEmpty) {
+      return 'Negotiable';
+    }
+    
+    // Assuming keys might be 'min' and 'max', or just display whatever is there
+    if (budgetMap.containsKey('min') && budgetMap.containsKey('max')) {
+      final min = budgetMap['min']!.toInt();
+      final max = budgetMap['max']!.toInt();
+      return '\$$min - \$$max';
+    }
+
+    // Fallback: just join values
+    return budgetMap.values.map((e) => '\$${e.toInt()}').join(' - ');
+  }
+
   // --- UI WIDGETS ---
 
-  Widget _buildHeader(MenteeProfile mentee) {
-    // Logic for "New Account" tag (Created within 7 days)
-    bool isNewAccount = false;
-    if (mentee.joinDate != null) {
-      final difference = DateTime.now().difference(mentee.joinDate!);
-      if (difference.inDays <= 7) {
-        isNewAccount = true;
-      }
-    }
+  Widget _buildHeader(UserModel mentee) {
+    // Logic for "New Account" - currently commented out as per your previous snippet
+    // bool isNewAccount = ...
+
+    // Handle nullable profile picture safely
+    final String? imageUrl = mentee.profilePictureUrl;
+    final bool hasValidUrl = imageUrl != null && imageUrl.isNotEmpty;
+    final bool isNetworkImage = hasValidUrl && imageUrl.startsWith('http');
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
@@ -118,18 +142,23 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           SizedBox(
             height: 320,
             width: double.infinity,
-            child: mentee.profileImageUrl.startsWith('http')
-                ? Image.network(
-                    mentee.profileImageUrl,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) => 
-                        Container(color: Colors.grey[300], child: const Icon(Icons.person, size: 50)),
-                  )
-                : Image.asset(
-                    mentee.profileImageUrl,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
+            child: hasValidUrl
+                ? (isNetworkImage
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorBuilder: (context, error, stackTrace) => 
+                            Container(color: Colors.grey[300], child: const Icon(Icons.person, size: 50)),
+                      )
+                    : Image.asset(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                      ))
+                : Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.person, size: 60, color: Colors.grey),
                   ),
           ),
 
@@ -140,34 +169,12 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Color(0x99000000)], // Slightly darker for readability
+                colors: [Colors.transparent, Color(0x99000000)],
               ),
             ),
           ),
 
-          // 3. "NEW" Account Tag (Top Left)
-          if (isNewAccount)
-            Positioned(
-              top: 16,
-              left: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.alert, // Use your alert/red color
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'NEW',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-          // 4. Name and Interests (Bottom Left)
+          // 3. Name and Interests (Bottom Left)
           Positioned(
             bottom: 18,
             left: 18,
@@ -181,16 +188,16 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        mentee.fullName.toUpperCase(),
+                        mentee.displayName.toUpperCase(), // UPDATED: matched UserModel field
                         style: AppTheme.montserratName.copyWith(color: Colors.white),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (mentee.isVerified) ...[
+                    if (mentee.isVerified == true) ...[
                       const SizedBox(width: 6),
                       const Icon(
                         Icons.verified,
-                        color: Colors.blueAccent, // Or AppTheme.primary
+                        color: Colors.blueAccent, 
                         size: 24,
                       ),
                     ],
@@ -201,7 +208,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: mentee.interests.map((interest) {
+                  children: _getInterests(mentee).map((interest) {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -224,7 +231,12 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     );
   }
 
-  Widget _buildMenteeDetails(MenteeProfile mentee) {
+  Widget _buildMenteeDetails(UserModel mentee) {
+    // Extract nested data safely
+    final String duration = mentee.menteeProfile?.duration ?? 'Flexible';
+    final String budgetString = _getBudgetDisplay(mentee);
+    final List<String> goals = mentee.menteeProfile?.goals ?? [];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Column(
@@ -234,7 +246,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           
           // Bio
           _buildSectionTitle('About'),
-          Text(mentee.bio, style: AppTheme.montserratBody),
+          Text(mentee.bio, style: AppTheme.montserratBody), // Bio is required in your model
           _buildDivider(),
           
           // Duration
@@ -244,7 +256,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
               const Icon(Icons.timer_outlined, size: 20, color: Colors.grey),
               const SizedBox(width: 8),
               Text(
-                mentee.duration, 
+                duration, 
                 style: AppTheme.montserratBody.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
@@ -254,7 +266,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           // Budget
           _buildSectionTitle('My budget is:'),
           Text(
-            mentee.budget,
+            budgetString,
             style: AppTheme.montserratBody.copyWith(
               color: Colors.black,
               fontWeight: FontWeight.w400,
@@ -267,7 +279,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: mentee.goals.map((g) => _buildBodyChip(g)).toList(),
+            children: goals.map((g) => _buildBodyChip(g)).toList(),
           ),
           const SizedBox(height: 40),
         ],
@@ -307,7 +319,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     );
   }
 
-  Widget _buildCard(MenteeProfile mentee) {
+  Widget _buildCard(UserModel mentee) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),

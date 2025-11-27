@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turo/models/user_detail_model.dart';
 import 'package:turo/models/user_model.dart';
 import '../../core/app_export.dart';
@@ -81,6 +82,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           );
         }
 
+        // --- FIX: Link Email/Password credential after OTP verification ---
+        if (widget.password != null) {
+          try {
+            // It's good practice to reload the user to ensure the object is not stale.
+            await _authService.currentUser?.reload();
+            final credential = EmailAuthProvider.credential(
+              email: widget.email,
+              password: widget.password!,
+            );
+            await _authService.currentUser?.linkWithCredential(credential);
+          } catch (e) {
+            // Handle error, e.g., if credential is already in use by another account
+            print('Failed to link credential: $e');
+            // Optionally, show a non-blocking error to the user
+          }
+        }
+
         // Re-fetch to get the user data
         final refreshedUserDoc = await _databaseService.getUser(uid);
         if (!refreshedUserDoc.exists)
@@ -95,6 +113,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               userId: uid,
               displayName: widget.email.split('@').first,
               roles: roles,
+              bio: '',
             );
         if (!mounted) return;
         if (roles.contains('mentor')) {

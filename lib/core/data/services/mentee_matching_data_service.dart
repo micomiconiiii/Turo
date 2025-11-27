@@ -1,15 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:turo/models/user_model.dart';
 import 'package:firebase_core/firebase_core.dart';
-import '../models/mentee_profile.dart';
 
 class MenteeMatchingDataService {
   final FirebaseFirestore _db = FirebaseFirestore.instanceFor(
   app: Firebase.app(), 
-  databaseId: 'turo', // <--- This matches your Firestore Database ID
+  databaseId: 'turo', 
 );
   /// Fetches ALL mentees from the users collection.
- Future<List<MenteeProfile>> getSuggestedMentees(String mentorId) async {
+ Future<List<UserModel>> getSuggestedMentees(String mentorId) async {
     try {
       print("DEBUG: Fetching all users for diagnostics...");
       
@@ -21,7 +20,7 @@ class MenteeMatchingDataService {
         return [];
       }
 
-      List<MenteeProfile> validProfiles = [];
+      List<UserModel> validProfiles = [];
 
       print("DEBUG: analyzing ${snapshot.docs.length} documents...");
 
@@ -53,7 +52,7 @@ class MenteeMatchingDataService {
 
         // If we get here, it's valid!
         print("✅ Doc $docId: ACCEPTED. Adding to list.");
-        validProfiles.add(MenteeProfile.fromUserModel(user));
+        validProfiles.add(user);
       }
 
       print("Returning ${validProfiles.length} profiles.");

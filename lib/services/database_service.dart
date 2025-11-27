@@ -66,12 +66,18 @@ class DatabaseService {
       final List<String> updatedRoles = List<String>.from(data['roles'] ?? []);
       if (!updatedRoles.contains('mentor')) updatedRoles.add('mentor');
 
+      // Merge existing and new mentorProfile data
+      final Map<String, dynamic> existingMentorProfile =
+          Map<String, dynamic>.from(data['mentor_profile'] ?? {});
+      existingMentorProfile.addAll(mentorProfile);
+
+
       await userRef.set({
         'user_id': uid, // <--- ADDED
         'bio': bio,
         'is_verified': isVerified,
         'roles': updatedRoles,
-        'mentor_profile': mentorProfile,
+        'mentor_profile': existingMentorProfile, // Use the merged map
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
@@ -85,6 +91,7 @@ class DatabaseService {
     required String fullName,
     required DateTime birthdate,
     required String address,
+    String? email,
   }) async {
     try {
       final userDetailRef = _db.collection(_userDetailsCollection).doc(uid);
@@ -93,6 +100,7 @@ class DatabaseService {
         'full_name': fullName,
         'birthdate': Timestamp.fromDate(birthdate),
         'address': address,
+        if (email != null) 'email': email,
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {

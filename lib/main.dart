@@ -4,6 +4,7 @@ import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:turo/presentation/auth_wrapper.dart';
 import 'firebase_options.dart';
 import 'core/app_export.dart';
 import 'package:turo/theme/mentor_app_theme.dart'; // Import theme
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return MaterialApp(
-          title: 'Turo Professional', // Using the more descriptive title
+          title: 'Turo', // Using the more descriptive title
           debugShowCheckedModeBanner: false,
           theme: AppTheme.themeData, // Using the theme from the second version
           locale: DevicePreview.locale(context),
@@ -53,7 +54,6 @@ class MyApp extends StatelessWidget {
               ),
             );
           },
-          // Using the routing from the first version
           initialRoute: AppRoutes.initialRoute,
           routes: AppRoutes.routes,
           // Adding localizations from the second version

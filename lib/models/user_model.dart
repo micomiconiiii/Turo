@@ -9,7 +9,7 @@ import 'package:turo/models/mentee_profile_model.dart';
 class UserModel {
   final String userId;
   final String displayName;
-  final String? bio;
+  final String bio;
   final String? profilePictureUrl;
   final List<String> roles;
   final MenteeProfileModel? menteeProfile;
@@ -20,7 +20,7 @@ class UserModel {
   UserModel({
     required this.userId,
     required this.displayName,
-    this.bio,
+    required this.bio,
     this.profilePictureUrl,
     required this.roles,
     this.menteeProfile,
@@ -52,7 +52,7 @@ class UserModel {
     return UserModel(
       userId: snapshot.id,
       displayName: data['display_name'] ?? '',
-      bio: data['bio'] as String?,
+      bio: data['bio'] as String,
       profilePictureUrl: data['profile_picture_url'] as String?,
       roles: List<String>.from(data['roles'] ?? []),
       menteeProfile: data['mentee_profile'] != null

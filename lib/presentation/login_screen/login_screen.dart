@@ -1,18 +1,60 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_edit_text.dart';
 import '../../widgets/custom_image_view.dart';
 import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 
-class LoginScreen extends StatelessWidget {
-  final TextEditingController usernameController = TextEditingController();
+class LoginScreen extends StatefulWidget {
+  LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   bool rememberMe = false;
 
-  LoginScreen({Key? key}) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+    _loadUserCredentials();
+  }
+
+  void _loadUserCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
+    if (email != null) {
+      setState(() {
+        emailController.text = email;
+        rememberMe = true;
+      });
+    } else {
+      setState(() {
+        rememberMe = false;
+      });
+    }
+  }
+
+  void _handleRememberMe(bool? value) {
+    setState(() {
+      rememberMe = value ?? false;
+    });
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +162,15 @@ class LoginScreen extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(left: 4.h),
             child: CustomEditText(
-              controller: usernameController,
-              placeholder: 'Username',
+              controller: emailController,
+              placeholder: 'Email',
               prefixIconPath: ImageConstant.imgVectorGray800,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter username';
+                  return 'Please enter email';
+                }
+                if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+                  return 'Please enter a valid email address';
                 }
                 return null;
               },
@@ -182,13 +227,10 @@ class LoginScreen extends StatelessWidget {
               color: Color(0xFF2C6A64),
             ),
           ),
-          Container(
-            width: 20.h,
-            height: 20.h,
-            decoration: BoxDecoration(
-              border: Border.all(color: Color(0xFF10403B), width: 1.h),
-              borderRadius: BorderRadius.circular(5.h),
-            ),
+          Checkbox(
+            value: rememberMe,
+            onChanged: _handleRememberMe,
+            activeColor: Color(0xFF10403B),
           ),
         ],
       ),
@@ -200,24 +242,41 @@ class LoginScreen extends StatelessWidget {
       padding: EdgeInsets.only(right: 24.h),
       child: Align(
         alignment: Alignment.centerRight,
-        child: RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: "Don't have an account yet? ",
-                style: TextStyleHelper.instance.body16RegularFustat.copyWith(
-                  height: 1.44,
-                  color: Color(0xFF3D3D3D),
+        child: GestureDetector(
+          onTap: () {
+            if (AppRoutes.routes.containsKey(AppRoutes.mentorHomeScreen)) {
+              Navigator.of(context)
+                  .pushNamed(AppRoutes.mentorHomeScreen);
+            } else {
+              // Handle the case where the route is not defined
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Registration screen not available.'),
+                  backgroundColor: Colors.red,
                 ),
-              ),
-              TextSpan(
-                text: "Sign up",
-                style: TextStyleHelper.instance.body16SemiBoldFustat.copyWith(
-                  height: 1.38,
-                  color: Color(0xFF2C6A64),
+              );
+            }
+          },
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "Don't have an account yet? ",
+                  style: TextStyleHelper.instance.body16RegularFustat.copyWith(
+                    height: 1.44,
+                    color: Color(0xFF3D3D3D),
+                  ),
                 ),
-              ),
-            ],
+                TextSpan(
+                  text: "Sign up",
+                  style:
+                      TextStyleHelper.instance.body16SemiBoldFustat.copyWith(
+                    height: 1.38,
+                    color: Color(0xFF2C6A64),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -226,30 +285,49 @@ class LoginScreen extends StatelessWidget {
 
   void _onLoginPressed(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
+      final prefs = await SharedPreferences.getInstance();
+      if (rememberMe) {
+        await prefs.setString('email', emailController.text);
+      } else {
+        await prefs.remove('email');
+      }
+
       try {
-        // Use AuthService to sign in
         final user = await _authService.signInWithEmailPassword(
-          usernameController.text,
-          passwordController.text,
+          emailController.text.trim(),
+          passwordController.text.trim(),
         );
 
         if (user != null) {
-          // Clear form fields after successful login
-          usernameController.clear();
-          passwordController.clear();
+          // --- ROLE-BASED REDIRECTION ---
+          // 1. Get user data from Firestore
+          final dbService = DatabaseService(); // Assuming you have this service
+          final userDoc = await dbService.getUser(user.uid);
+
+          if (!userDoc.exists) {
+            throw Exception('User data not found in database.');
+          }
+
+          // 2. Check roles
+          final data = userDoc.data() as Map<String, dynamic>;
+          final roles = List<String>.from(data['roles'] ?? []);
 
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Login successful!'),
+              content: Text('Login successful! Welcome back.'),
               backgroundColor: Color(0xFF10403B),
             ),
           );
 
-          // Navigate to app navigation screen (main app)
-          Navigator.of(
-            context,
-          ).pushReplacementNamed(AppRoutes.mentorHomeScreen); // testsing only
+          // 3. Navigate based on role
+          if (roles.contains('mentor')) {
+            Navigator.of(context)
+                .pushReplacementNamed(AppRoutes.mentorHomeScreen);
+          } else {
+            Navigator.of(context)
+                .pushReplacementNamed(AppRoutes.appNavigationScreen);
+          }
         }
       } catch (e) {
         // Show error message
