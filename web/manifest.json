@@ -1,32 +1,57 @@
 {
+<<<<<<< HEAD
     "name": "user_home_page",
     "short_name": "user_home_page",
+=======
+    "name": "Turo",
+    "short_name": "Turo",
+>>>>>>> origin/main
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
+<<<<<<< HEAD
     "description": "A new Flutter project.",
+=======
+    "description": "Turo Mentorship App.",
+>>>>>>> origin/main
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
+<<<<<<< HEAD
             "src": "icons/Icon-192.png",
+=======
+            "src": "assets/images/turo-logo.png",
+>>>>>>> origin/main
             "sizes": "192x192",
             "type": "image/png"
         },
         {
+<<<<<<< HEAD
             "src": "icons/Icon-512.png",
+=======
+            "src": "assets/images/turo-logo.png",
+>>>>>>> origin/main
             "sizes": "512x512",
             "type": "image/png"
         },
         {
+<<<<<<< HEAD
             "src": "icons/Icon-maskable-192.png",
+=======
+            "src": "assets/images/turo-logo.png",
+>>>>>>> origin/main
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
+<<<<<<< HEAD
             "src": "icons/Icon-maskable-512.png",
+=======
+            "src": "assets/images/turo-logo.png",
+>>>>>>> origin/main
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

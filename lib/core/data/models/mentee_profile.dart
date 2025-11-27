@@ -1,10 +1,9 @@
-//For backend data model of Mentee Profile
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../models/user_model.dart';
 
 class MenteeProfile {
   final String id;
   final String fullName;
-  final DateTime joinDate;
+  final DateTime? joinDate;
   final String profileImageUrl;
 
   final String bio;
@@ -16,11 +15,14 @@ class MenteeProfile {
 
   final String currentRole;
   final String status;
+  final bool isVerified;
+  final String duration;
+  final List<String> interests;
 
   const MenteeProfile({
     required this.id,
     required this.fullName,
-    required this.joinDate,
+    this.joinDate,
     required this.profileImageUrl,
     required this.bio,
     required this.skillsToLearn,
@@ -30,59 +32,42 @@ class MenteeProfile {
     required this.notes,
     required this.currentRole,
     required this.status,
+    required this.isVerified,
+    required this.duration,
+    required this.interests,
   });
 
-  factory MenteeProfile.initial(String userId) {
+  factory MenteeProfile.fromUserModel(UserModel user) {
     return MenteeProfile(
-      id: userId,
-      fullName: '',
-      joinDate: DateTime.now(),
-      profileImageUrl: '',
-      bio: '',
-      skillsToLearn: [],
-      targetMentors: [],
-      budget: '',
-      goals: [],
-      notes: '',
-      currentRole: '',
-      status: 'seeking_mentor',
+      id: user.userId,
+      fullName: user.displayName,
+      joinDate: null, // No source for this in user model, can be fetched from user_details if needed
+      profileImageUrl: (user.profilePictureUrl != null && user.profilePictureUrl!.isNotEmpty)
+          ? user.profilePictureUrl!
+          : 'assets/images/default_avatar.jpg',
+      bio: user.bio ?? '',
+      isVerified: user.isVerified ?? false,
+      duration: user.menteeProfile?.duration ?? '',
+      interests: user.menteeProfile?.interests ?? [],
+      skillsToLearn: user.menteeProfile?.interests ?? [],
+      targetMentors: [], // No source in new models
+      budget: _formatBudget(user.menteeProfile?.budget),
+      goals: user.menteeProfile?.goals ?? [],
+      notes: '', // No source in new models
+      currentRole: '', // No source in new models
+      status: 'seeking_mentor', // Assumed from the context of matching
+     
     );
   }
 
-  Map<String, dynamic> toFirestore() {
-    return {
-      'fullName': fullName,
-      'joinDate': Timestamp.fromDate(joinDate),
-      'profileImageUrl': profileImageUrl,
-      'bio': bio,
-      'skillsToLearn': skillsToLearn,
-      'targetMentors': targetMentors,
-      'budget': budget,
-      'goals': goals,
-      'notes': notes,
-      'currentRole': currentRole,
-      'status': status,
-    };
-  }
-
-  factory MenteeProfile.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data();
-    if (data == null) throw Exception("Document data was null");
-
-    return MenteeProfile(
-      id: snapshot.id,
-      fullName: data['fullName'] ?? '',
-      joinDate: (data['joinDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      profileImageUrl: data['profileImageUrl'] ?? '',
-      bio: data['bio'] ?? '',
-      skillsToLearn: List<String>.from(data['skillsToLearn'] ?? []),
-      targetMentors: List<String>.from(data['targetMentors'] ?? []),
-      budget: data['budget'] ?? '',
-      goals: List<String>.from(data['goals'] ?? []),
-      notes: data['notes'] ?? '',
-      currentRole: data['currentRole'] ?? '',
-      status: data['status'] ?? 'seeking_mentor',
-    );
+  static String _formatBudget(Map<String, double>? budget) {
+    if (budget == null || budget.isEmpty) {
+      return 'Not specified';
+    }
+    final min = budget['min'] ?? 0;
+    final max = budget['max'] ?? 0;
+    if (min == 0 && max == 0) return 'Not specified';
+    if (min == max) return 'PHP ${max.toStringAsFixed(0)}/hr';
+    return 'PHP ${min.toStringAsFixed(0)}-${max.toStringAsFixed(0)}/hr';
   }
 }

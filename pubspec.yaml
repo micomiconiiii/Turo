@@ -1,47 +1,90 @@
-name: user_home_page
+name: turo
 description: "A new Flutter project."
-publish_to: "none"
-version: 1.0.0+1
-environment:
-  sdk: ">=3.6.0 <4.0.0"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.9.2 <4.0.0" # Using a broader range compatible with both
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
+  flutter_localizations: # Added from second part
     sdk: flutter
 
   # UI/Assets
-  flutter_svg: ^2.0.12
-  cached_network_image: ^3.4.1 # For remote images
-  font_awesome_flutter: ^10.7.0 # For icons (Bell, User, Heart, X, etc.)
-  swipe_cards: ^2.0.0
-  gradient_borders: ^1.0.2
+  flutter_svg: ^2.2.1 # Kept version from turo
+  cached_network_image: ^3.4.1
+  font_awesome_flutter: ^10.7.0
+  cupertino_icons: ^1.0.8
+  swipe_cards: ^2.0.0 # Added from second part
+  gradient_borders: ^1.0.2 # Added from second part
+  pinput: ^4.0.0
 
   # State Management & Utility
-  provider: ^6.1.2
-  connectivity_plus: ^6.1.0
-  shared_preferences: ^2.3.3
-  web: any
+  provider: ^6.1.5+1 # Kept newer version from turo
+  connectivity_plus: ^6.1.0 # Added from second part
+  shared_preferences: ^2.3.3 # Added from second part
+  intl: ^0.20.2
+  http: ^1.1.0
+  mailer: ^6.0.1
+  universal_io: ^2.2.2
+  flutter_typeahead: ^5.2.0
 
-  # Backend (Firebase Core)
-  firebase_core: ^3.2.0
-  cloud_firestore: ^5.0.3
+  # File/Image Pickers
+  file_picker: ^8.1.2
+  image_picker: ^1.2.0
 
-  # ADDED: device_preview moved to dependencies
-  device_preview: ^1.1.0
+  # Backend
+  supabase_flutter: ^2.10.3
+  firebase_core: ^3.15.0 # Kept newer version from turo
+  firebase_auth: ^5.3.4
+  cloud_firestore: ^5.5.3 # Kept newer version from turo
+  firebase_storage: ^12.3.7
+  firebase_dynamic_links: ^6.1.10
+  cloud_functions: ^5.2.3
+  uni_links: ^0.5.1
+
+  # Dev tools in dependencies
+  device_preview: ^1.3.1 # Kept newer version from turo
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  build_runner: ^2.4.7
+  mockito: ^5.4.4
+  flutter_lints: ^5.0.0 # Kept newer version from turo
 
 flutter:
   uses-material-design: true
 
+  # Application assets
   assets:
+    - assets/cities.json
     - assets/images/
-
+    - assets/locations/
+  
   fonts:
     - family: Fustat
       fonts:
@@ -57,3 +100,7 @@ flutter:
           weight: 600
         - asset: assets/fonts/MontserratRegular.ttf
           weight: 400
+
+dependency_overrides:
+  firebase_storage_web: ^3.6.23
+  web: ^0.5.1 # Using specific version from turo

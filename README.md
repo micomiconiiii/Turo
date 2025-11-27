@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# user_home_page
+# turo
 
 A new Flutter project.
 
@@ -15,6 +14,3 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-=======
-# Turo
->>>>>>> d290a9ee60932f2aeb31a08eb6c389313ae0f0e6

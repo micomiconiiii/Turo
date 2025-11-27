@@ -1,0 +1,55 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "turo-31805",
+          "appId": "1:507188440079:android:8160d7ace74d945143877a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "turo-31805",
+          "configurations": {
+            "android": "1:507188440079:android:8160d7ace74d945143877a",
+            "ios": "1:507188440079:ios:7d2356826a8c28ce43877a",
+            "macos": "1:507188440079:ios:7d2356826a8c28ce43877a",
+            "web": "1:507188440079:web:f298f35054b66ca543877a",
+            "windows": "1:507188440079:web:69e7441df2a8871643877a"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

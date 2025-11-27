@@ -90,12 +90,21 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
+<<<<<<< HEAD
             VALUE "FileDescription", "user_home_page" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "user_home_page" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "user_home_page.exe" "\0"
             VALUE "ProductName", "user_home_page" "\0"
+=======
+            VALUE "FileDescription", "turo" "\0"
+            VALUE "FileVersion", VERSION_AS_STRING "\0"
+            VALUE "InternalName", "turo" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
+            VALUE "OriginalFilename", "turo.exe" "\0"
+            VALUE "ProductName", "turo" "\0"
+>>>>>>> origin/main
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
