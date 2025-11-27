@@ -65,7 +65,7 @@ class MenteeMatchingDataService {
     }
   }
   /// Records a swipe action (Like/Pass) to Firestore
-  Future<void> recordSwipe({
+ Future<void> recordSwipe({
     required String mentorId,
     required String menteeId,
     required bool isLike,
@@ -73,6 +73,7 @@ class MenteeMatchingDataService {
     try {
       final String docId = '${mentorId}_$menteeId';
       
+      // 1. Record the Swipe Action
       await _db.collection('swipes').doc(docId).set({
         'mentorId': mentorId,
         'menteeId': menteeId,
@@ -82,27 +83,36 @@ class MenteeMatchingDataService {
       
       print("Swipe recorded: ${isLike ? 'Like' : 'Pass'} for $menteeId");
 
+      // 2. Check for Mutual Match (Only if YOU liked THEM)
       if (isLike) {
-        _checkForMutualMatch(mentorId, menteeId);
+        await _checkForMutualMatch(mentorId, menteeId);
       }
+
     } catch (e) {
       print("Error recording swipe: $e");
     }
   }
 
+  // New Helper Function
   Future<void> _checkForMutualMatch(String mentorId, String menteeId) async {
-    final reverseSwipe = await _db.collection('swipes').doc("${menteeId}_$mentorId").get();
+    // Check if the mentee has ALREADY swiped 'like' on this mentor
+    // We look for the document: menteeId_mentorId
+    final reverseSwipeDoc = await _db.collection('swipes').doc("${menteeId}_$mentorId").get();
 
-    if (reverseSwipe.exists && reverseSwipe.data()?['action'] == 'like') {
+    if (reverseSwipeDoc.exists && reverseSwipeDoc.data()?['action'] == 'like') {
       print("IT'S A MATCH! Creating match record...");
       
+      // 3. Create the Match Document (Unlocks Chat)
       await _db.collection('matches').add({
-        'users': [mentorId, menteeId],
+        'users': [mentorId, menteeId], // Critical for security rules
         'menteeId': menteeId,
         'mentorId': mentorId,
         'timestamp': FieldValue.serverTimestamp(),
-        'lastMessage': null,
+        'lastMessage': 'You matched! Say hi.', // Initial message
+        'lastMessageTime': FieldValue.serverTimestamp(),
       });
+      
+      // Optional: Trigger a local notification or UI popup here
     }
   }
 }

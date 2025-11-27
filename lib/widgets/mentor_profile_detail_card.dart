@@ -1,7 +1,7 @@
 // For Mentor Home Page 
 import 'package:flutter/material.dart';
-import 'package:user_home_page/core/data/models/mentor_profile.dart';
-import 'package:user_home_page/theme/mentor_app_theme.dart'; // Fixed
+import 'package:turo/core/data/models/mentor_profile.dart';
+import 'package:turo/theme/mentor_app_theme.dart'; // Fixed
 
 const Color _kDarkGreyText = Color(0xFF3D3D3D);
 
