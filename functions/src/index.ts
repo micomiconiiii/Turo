@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as nodemailer from "nodemailer";
+export * from './admin/user_management';
 import {defineString} from "firebase-functions/params";
 
 // Define email and password as environment variables (lazy-loaded)

@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart'; // Required for Firebase.app()
 import '../models/mentor_verification_model.dart';
+import '../models/user_model.dart';
+import '../models/user_detail_model.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class AdminService {
   // CORRECT INITIALIZATION: Connects to the 'turo' database specifically
@@ -213,5 +216,65 @@ class AdminService {
 
     await batch.commit();
     print("✅ Seeded Pending Mentor: $fakeUid");
+  }
+
+  /// STREAM: Listen to ALL users (Public Profiles) for the main table
+  Stream<List<UserModel>> streamAllUsers() {
+    return _db
+        .collection('users')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            try {
+              return UserModel.fromFirestore(doc.data(), doc.id);
+            } catch (e) {
+              print("Error parsing user ${doc.id}: $e");
+              return UserModel(
+                userId: doc.id,
+                displayName: 'Error User',
+                bio: '',
+                roles: ['unknown'],
+              );
+            }
+          }).toList();
+        });
+  }
+
+  /// FETCH: Get Private Details (Email, Real Name, Active Status)
+  /// We fetch this ON DEMAND (Future) instead of Streaming to save reads.
+  Future<UserDetailModel?> getUserDetails(String uid) async {
+    try {
+      final doc = await _db.collection('user_details').doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        return UserDetailModel.fromFirestore(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching details for $uid: $e");
+      return null;
+    }
+  }
+
+  /// ACTION: Ban or Unban a User (Via Cloud Function)
+  Future<void> toggleUserStatus(String uid, bool currentStatus) async {
+    // Logic: If active (true), we want to ban (shouldBan = true).
+    final bool shouldBan = currentStatus;
+
+    try {
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+        'toggleUserBan',
+      );
+
+      await callable.call(<String, dynamic>{
+        'uid': uid,
+        'shouldBan': shouldBan,
+      });
+
+      print("✅ User $uid status updated via Cloud Function.");
+    } catch (e) {
+      print("❌ Failed to toggle ban status: $e");
+      throw e; // Rethrow so UI can handle it
+    }
   }
 }

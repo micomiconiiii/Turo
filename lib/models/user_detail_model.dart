@@ -1,9 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Model class representing a user's private details stored in the user_details collection.
-///
-/// This model captures sensitive user information such as email, birthdate, and address.
-/// This data is stored separately from public profile data for security and privacy.
 class UserDetailModel {
   final String userId;
   final String email;
@@ -12,7 +8,9 @@ class UserDetailModel {
   final String address;
   final Timestamp createdAt;
 
-  /// Creates a [UserDetailModel] with all required fields.
+  // NEW: Support for Banning/Suspension
+  final bool isActive;
+
   UserDetailModel({
     required this.userId,
     required this.email,
@@ -20,9 +18,9 @@ class UserDetailModel {
     required this.birthdate,
     required this.address,
     required this.createdAt,
+    this.isActive = true, // Default to active
   });
 
-  /// Converts this model to a Firestore-compatible map.
   Map<String, dynamic> toFirestore() {
     return {
       'user_id': userId,
@@ -31,20 +29,20 @@ class UserDetailModel {
       'birthdate': birthdate,
       'address': address,
       'created_at': createdAt,
+      'is_active': isActive,
     };
   }
 
-  /// Creates a [UserDetailModel] from a Firestore document map.
-  ///
-  /// Throws [TypeError] if required fields are missing or have incorrect types.
   factory UserDetailModel.fromFirestore(Map<String, dynamic> data) {
     return UserDetailModel(
-      userId: data['user_id'] as String,
-      email: data['email'] as String,
-      fullName: data['full_name'] as String,
-      birthdate: data['birthdate'] as Timestamp,
-      address: data['address'] as String,
-      createdAt: data['created_at'] as Timestamp,
+      userId: data['user_id'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      fullName: data['full_name'] as String? ?? '',
+      birthdate: data['birthdate'] as Timestamp? ?? Timestamp.now(),
+      address: data['address'] as String? ?? '',
+      createdAt: data['created_at'] as Timestamp? ?? Timestamp.now(),
+      // Handle missing field for older users (default to true)
+      isActive: data['is_active'] as bool? ?? true,
     );
   }
 }
