@@ -2,60 +2,41 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // -------------------------------
-    // EXISTING RULES (Keep these)
-    // -------------------------------
-
-    // Users collection
     match /users/{userId} {
       allow read, list: if request.auth.uid != null;
       allow create, update: if request.auth.uid == userId;
     }
 
-    // User details (private data)
     match /user_details/{userId} {
       allow read, create, update: if request.auth.uid == userId;
     }
 
-    // Mentor verification data
     match /mentor_verifications/{userId} {
       allow read, create, update: if request.auth.uid == userId;
     }
 
-    // Achievements
     match /mentor_verifications/{userId}/achievements/{achievementId} {
         allow read, create, update, delete: if request.auth.uid == userId;
     }
 
-    // Cities
     match /cities/{cityId} {
       allow read: if request.auth.uid != null;
     }
 
-    // -------------------------------
-    // NEW RULES (Add these to fix the error)
-    // -------------------------------
-
-    // Swipes Collection - REQUIRED for the Home Screen
     match /swipes/{swipeId} {
-      // Allow reading swipes ONLY if they belong to the logged-in user
-      // This allows your app to query: .where('mentorId', isEqualTo: currentUid)
-      allow list: if request.auth != null && resource.data.mentorId == request.auth.uid;
-      
-      // Allow checking a specific swipe document
-      allow get: if request.auth != null && resource.data.mentorId == request.auth.uid;
-
-      // Allow creating a swipe ONLY if the 'mentorId' in the data matches your own ID
-      allow create: if request.auth != null && request.resource.data.mentorId == request.auth.uid;
+      // A user can read a swipe doc if their UID is in the doc ID (swiper_swiped).
+      // A user can only create a swipe doc if they are the swiper.
+      allow read: if request.auth.uid in swipeId.split('_');
+      allow create: if request.auth.uid == swipeId.split('_')[0];
+      allow update, delete: if false; // Swipes are immutable
     }
-    
-    // Matches Collection - For when two users like each other
+
     match /matches/{matchId} {
-      // Allow reading if you are one of the participants in the match
-      allow read: if request.auth != null && request.auth.uid in resource.data.users;
-      
-      // Allow system to create matches
-      allow create: if request.auth != null; 
+      // A user can interact with a match doc if their UID is in the list of users.
+      // A user can only create a match if they are one of the users in the match.
+      allow read, update: if request.auth.uid in resource.data.users;
+      allow create: if request.auth.uid in request.resource.data.users;
+      allow delete: if false; // Matches are immutable
     }
   }
 }

@@ -5,6 +5,7 @@ import 'package:turo/widgets/bottom_nav_bar.dart';
 import 'package:turo/services/mentee_matching_data_service.dart';
 import 'package:turo/theme/mentor_app_theme.dart';
 import 'package:turo/models/user_model.dart';
+import 'package:turo/presentation/match_screen/match_screen.dart'; 
 
 const double _kBottomNavBarHeight = 130.0;
 
@@ -16,6 +17,7 @@ class MentorHomeScreen extends StatefulWidget {
 }
 
 class _MentorHomeScreenState extends State<MentorHomeScreen> {
+  // Ensure this service returns Future<bool> for recordSwipe as discussed previously
   final MenteeMatchingDataService _matchingService = MenteeMatchingDataService();
   
   final List<SwipeItem> _swipeItems = [];
@@ -56,6 +58,7 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           _swipeItems.add(
             SwipeItem(
               content: mentee,
+              // We pass the specific mentee and the swipe direction to the handler
               likeAction: () => _onSwipe(mentee, true),
               nopeAction: () => _onSwipe(mentee, false),
             ),
@@ -76,60 +79,90 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     }
   }
 
-  void _onSwipe(UserModel mentee, bool liked) {
+  // --- UPDATED SWIPE HANDLER ---
+  void _onSwipe(UserModel mentee, bool liked) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _matchingService.recordSwipe(
+    if (user == null) return;
+
+    bool isMatch = false;
+
+    try {
+      // 1. Await the service call to check for a match
+      // This assumes recordSwipe returns Future<bool>
+      isMatch = await _matchingService.recordSwipe(
         mentorId: user.uid, 
-        menteeId: mentee.userId, // UPDATED: matched UserModel field
+        menteeId: mentee.userId, 
         isLike: liked
       );
+      print("UI: Service returned. isMatch = $isMatch");
+    } catch (e) {
+      print("Error recording swipe: $e");
+      // Optionally show an error snackbar here
     }
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(liked
-            ? 'You accepted ${mentee.displayName}' // UPDATED: matched UserModel field
-            : 'You skipped ${mentee.displayName}'),
-        duration: const Duration(milliseconds: 500),
-        backgroundColor: liked ? AppTheme.chipGreen : Colors.grey,
-      ),
-    );
+    if (!mounted) return;
+
+    // 2. If it is a match, show the Dialog!
+    if (liked && isMatch) {
+      // Create a temporary User Model for the current Mentor to display in the popup
+      UserModel currentUserModel = UserModel(
+        userId: user.uid,
+        displayName: user.displayName ?? "You",
+        bio: "Mentor", // 'bio' is required in your model
+        profilePictureUrl: user.photoURL, 
+        roles: ['mentor'], // 'roles' is required in your model
+        isVerified: false,
+      );
+      showDialog(
+        context: context,
+        barrierDismissible: false, // User must click a button to exit
+        builder: (context) {
+          print("UI: Building MatchScreen Widget");
+          return MatchScreen(
+            currentUser: currentUserModel, 
+            matchedUser: mentee,
+          );
+        },
+      );
+    } else {
+      // 3. If no match (or skipped), show the standard SnackBar
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(liked
+              ? 'You liked ${mentee.displayName}'
+              : 'You skipped ${mentee.displayName}'),
+          duration: const Duration(milliseconds: 500),
+          backgroundColor: liked ? AppTheme.chipGreen : Colors.grey,
+        ),
+      );
+    }
   }
 
   // --- HELPER LOGIC FOR DATA EXTRACTION ---
 
-  // Helper to safely get interests from the nested profile
   List<String> _getInterests(UserModel user) {
     return user.menteeProfile?.interests ?? [];
   }
 
-  // Helper to format the Budget Map into a String
   String _getBudgetDisplay(UserModel user) {
     final budgetMap = user.menteeProfile?.budget;
     if (budgetMap == null || budgetMap.isEmpty) {
       return 'Negotiable';
     }
     
-    // Assuming keys might be 'min' and 'max', or just display whatever is there
     if (budgetMap.containsKey('min') && budgetMap.containsKey('max')) {
       final min = budgetMap['min']!.toInt();
       final max = budgetMap['max']!.toInt();
       return '\$$min - \$$max';
     }
 
-    // Fallback: just join values
     return budgetMap.values.map((e) => '\$${e.toInt()}').join(' - ');
   }
 
   // --- UI WIDGETS ---
 
   Widget _buildHeader(UserModel mentee) {
-    // Logic for "New Account" - currently commented out as per your previous snippet
-    // bool isNewAccount = ...
-
-    // Handle nullable profile picture safely
     final String? imageUrl = mentee.profilePictureUrl;
     final bool hasValidUrl = imageUrl != null && imageUrl.isNotEmpty;
     final bool isNetworkImage = hasValidUrl && imageUrl.startsWith('http');
@@ -183,12 +216,11 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Name Row with Verification Badge
                 Row(
                   children: [
                     Flexible(
                       child: Text(
-                        mentee.displayName.toUpperCase(), // UPDATED: matched UserModel field
+                        mentee.displayName.toUpperCase(),
                         style: AppTheme.montserratName.copyWith(color: Colors.white),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -204,7 +236,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Chips for Interests
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -232,7 +263,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
   }
 
   Widget _buildMenteeDetails(UserModel mentee) {
-    // Extract nested data safely
     final String duration = mentee.menteeProfile?.duration ?? 'Flexible';
     final String budgetString = _getBudgetDisplay(mentee);
     final List<String> goals = mentee.menteeProfile?.goals ?? [];
@@ -244,12 +274,10 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
         children: [
           const SizedBox(height: 20),
           
-          // Bio
           _buildSectionTitle('About'),
-          Text(mentee.bio, style: AppTheme.montserratBody), // Bio is required in your model
+          Text(mentee.bio, style: AppTheme.montserratBody),
           _buildDivider(),
           
-          // Duration
           _buildSectionTitle("Preferred Duration"),
           Row(
             children: [
@@ -263,7 +291,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           ),
           _buildDivider(),
 
-          // Budget
           _buildSectionTitle('My budget is:'),
           Text(
             budgetString,
@@ -274,7 +301,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
           ),
           _buildDivider(),
 
-          // Goals
           _buildSectionTitle('Goals:'),
           Wrap(
             spacing: 6,
@@ -287,7 +313,6 @@ class _MentorHomeScreenState extends State<MentorHomeScreen> {
     );
   }
 
-  // Helper Widgets
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0, bottom: 6.0),

@@ -22,6 +22,7 @@ import '../presentation/mentor_registration_screen/otp_verification_screen.dart'
 // --- MENTEE ONBOARDING ---
 import '../presentation/mentee_onboarding/pages/mentee_onboarding_page.dart';
 import '../presentation/mentee_onboarding/providers/mentee_onboarding_provider.dart';
+import '../presentation/home_screen/mentee_home_screen.dart';
 import '../presentation/home_screen/mentor_home_screen.dart';
 
 class AppRoutes {
@@ -34,6 +35,7 @@ class AppRoutes {
   static const String userRegistrationScreen = '/user_registration_screen';
   static const String menteeOnboardingPage = '/mentee_onboarding_page';
   static const String mentorHomeScreen = '/mentor_home_screen';
+  static const String menteeHomeScreen = '/mentee_home_screen';
   static const String initialRoute = '/';
 
   static Map<String, WidgetBuilder> get routes => {
@@ -66,5 +68,6 @@ class AppRoutes {
         loginScreen: (context) => LoginScreen(),
         userRegistrationScreen: (context) => UserRegistrationScreen(),
         mentorHomeScreen: (context) => const MentorHomeScreen(),
+        menteeHomeScreen: (context) => const MenteeHomeScreen(),
       };
 }

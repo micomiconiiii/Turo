@@ -320,10 +320,14 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           // 3. Navigate based on role
-          if (roles.contains('mentor')) {
+          if (roles.contains('mentee')) {
+            Navigator.of(context)
+                .pushReplacementNamed(AppRoutes.menteeHomeScreen);
+          } else if (roles.contains('mentor')) {
             Navigator.of(context)
                 .pushReplacementNamed(AppRoutes.mentorHomeScreen);
           } else {
+            // Fallback for users with no specific role or during registration
             Navigator.of(context)
                 .pushReplacementNamed(AppRoutes.appNavigationScreen);
           }
