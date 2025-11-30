@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart'; // Required for Firebase.app()
+import 'package:cloud_functions/cloud_functions.dart';
 import '../models/mentor_verification_model.dart';
 import '../models/user_model.dart';
 import '../models/user_detail_model.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+import '../models/contract_model.dart';
 
 class AdminService {
   // CORRECT INITIALIZATION: Connects to the 'turo' database specifically
@@ -276,5 +277,89 @@ class AdminService {
       print("❌ Failed to toggle ban status: $e");
       throw e; // Rethrow so UI can handle it
     }
+  }
+
+  // --- CONTRACTS & DISPUTES FEATURES ---
+
+  /// STREAM: Listen to contracts (Focus on Disputed/Active)
+  Stream<List<ContractModel>> streamContracts() {
+    return _db
+        .collection('contracts')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) {
+                try {
+                  return ContractModel.fromFirestore(doc);
+                } catch (e) {
+                  print("Error parsing contract ${doc.id}: $e");
+                  return null;
+                }
+              })
+              .whereType<ContractModel>()
+              .toList();
+        });
+  }
+
+  /// HELPER: Fetch a generic user name (Mentor or Mentee)
+  Future<String> getUserName(String uid) async {
+    // Reuse existing logic, just renamed for clarity
+    return getMentorName(uid);
+  }
+
+  /// ACTION: Resolve Dispute
+  /// Admins can force a contract to 'cancelled' (refund) or 'completed' (payout).
+  Future<void> resolveDispute(
+    String contractId,
+    String resolution,
+    String adminNote,
+  ) async {
+    WriteBatch batch = _db.batch();
+
+    // 1. Update Contract Status
+    DocumentReference contractRef = _db.collection('contracts').doc(contractId);
+    batch.update(contractRef, {
+      'status': resolution, // 'cancelled' or 'completed'
+      'admin_resolution_note': adminNote,
+      'resolved_at': FieldValue.serverTimestamp(),
+    });
+
+    // 2. Log Activity
+    DocumentReference activityRef = _db.collection('activities').doc();
+    batch.set(activityRef, {
+      'event_type': 'dispute_resolved',
+      'description': 'Contract $contractId resolved as $resolution by admin.',
+      'related_contract_id': contractId,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
+  /// SEEDER: Generates a Mock Contract (Disputed)
+  /// This simulates a Mentee paying, then reporting a problem.
+  Future<void> seedTestContract() async {
+    String contractId = 'cnt_${DateTime.now().millisecondsSinceEpoch}';
+
+    // We use your existing seed users if available, or generic placeholders
+    String mentorId = 'test_mentor_123';
+    String menteeId = 'test_mentee_456';
+
+    await _db.collection('contracts').doc(contractId).set({
+      'contract_id': contractId,
+      'mentor_id': mentorId,
+      'mentee_id': menteeId,
+      'status':
+          'disputed', // CRITICAL: This makes it appear in the "Action Needed" tab
+      'rate': 1500.00,
+      'duration': '1 Month',
+      'terms': 'Mentorship for Flutter Advanced Architecture.',
+      'payment_status': 'in_escrow', // Money is held by Turo
+      'created_at': FieldValue.serverTimestamp(),
+      'dispute_reason': 'Mentor did not show up for 3 sessions.',
+    });
+
+    print("✅ Seeded Disputed Contract: $contractId");
   }
 }
